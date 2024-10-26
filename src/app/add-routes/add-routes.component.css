@@ -1,0 +1,52 @@
+.addroutes-sidebar {
+    position: absolute;
+    z-index: 1000;
+    
+    background-color: rgba(255,255,255,0.8);
+    height: 800px;
+    width: 30%;
+    padding: 20px;
+    overflow-y:scroll;
+}
+
+.addroute-type {
+    width: 50%;
+}
+
+.addroute-number, .addroute-name {
+    margin-top: 10px;
+}
+.required {
+    color: red;
+}
+
+.addroute-route {
+    margin-top: 20px;
+}
+
+.addroute-itenerary > ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.route-icon {
+    margin-right: 20px;
+    font-size: 10px;
+}
+
+.addroute-gapmaker {
+    font-size: 5px;
+    margin-left: 1px;
+    margin-bottom: 5px;
+}
+
+.addroute-buttons {
+    margin-top: 20px;
+}
+
+.addroutes-map {
+    width: 100%;
+    height: 800px;
+    overflow: hidden;
+}
