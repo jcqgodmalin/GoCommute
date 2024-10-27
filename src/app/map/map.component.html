@@ -1,11 +1,10 @@
-<div id="map" style="width: 100%;"></div>
+<div id="map"></div>
 
 <!-- Context Menu -->
 <div id="map-context-menu" class="context-menu">
     <ul>
       <li (click)="addMarker('start')"><i class="fa-solid fa-location-dot"></i> Add Starting Point</li>
       <li (click)="addMarker('marker')"><i class="fa-regular fa-circle-dot"></i> Add Marker</li>
-      <li (click)="addMarker('turn')"><i class="fa-solid fa-arrows-left-right"></i> Add Turn</li>
       <li (click)="addMarker('end')"><i class="fa-solid fa-location-dot"></i> Add End Point</li>
     </ul>
   </div>
@@ -17,4 +16,4 @@
       <p>Latitude: {{ selectedMarker?.lat }}</p>
       <p>Longitude: {{ selectedMarker?.lng }}</p>
     </div>
-  </div>
+</div>

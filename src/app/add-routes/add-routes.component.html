@@ -1,81 +1,59 @@
 <div class="addroutes">
-    <div class="addroutes-sidebar">
-        <div class="addroutes-title">
-            <h1>Add Routes</h1>
-        </div>
-        <div class="addroutes-description">
-            <p>
-                Be a part of our mission to guide newcomers and tourists by helping them navigate the city by adding Jeepney and Bus routes!
-            </p>
-        </div>
-        <div class="addroutes-controls">
-            <form action="">
-                <div class="input-group addroute-type">
-                    <span class="input-group-text" id="basic-addon1">Type <span class="required">*</span></span>
-                    <select class="form-select form-select-lg" name="vehicleType" [(ngModel)]="routeService.route.vehicleType" (ngModelChange)="vehicleTypeChanged($event)" aria-label="Default select example">
-                        <option value="jeep">Jeepney</option>
-                        <option value="bus">Bus</option>
-                      </select>
-                </div>
-                <div *ngIf="routeService.route.vehicleType != ''" class="addroute-details">
-                    <div *ngIf="routeService.route.vehicleType === 'bus'" class="form-floating">
-                        <input type="text" class="form-control addroute-name" id="busname" placeholder="Bus Name">
-                        <label for="busname">Bus Name <span class="required">*</span></label>
-                    </div>
-                    <div class="form-floating">
-                        <input type="text" class="form-control addroute-number" id="routenumber" placeholder="Route Number">
-                        <label for="routenumber">Route Number <span *ngIf="routeService.route.vehicleType === 'jeep'" class="required">*</span></label>
-                    </div>
-                    <div class="addroute-route">
-                        <div *ngIf="!routeService.route.startingpoint" class="addroute-nostartingpoint">
-                            <p>Right Click on the map to start adding a route</p>
-                        </div>
-                        <div *ngIf="routeService.route.startingpoint" class="addroute-itenerary">
-                            <h4>Route:</h4>
-                            <ul>
-                                <li><i class="fa-solid fa-location-dot route-icon"></i>Starting Point: {{routeService.route.startingpointStr}}</li>
-                                <li><i class="fa-solid fa-circle-dot addroute-gapmaker"></i></li>
-                                <li><i class="fa-solid fa-circle-dot addroute-gapmaker"></i></li>
-                                <ng-container *ngFor="let waypoint of routeService.route.straight_turning_markers">
-                                    <li *ngIf="waypoint.type === 'marker'">
-                                        <i class="fa-regular fa-circle-dot route-icon"></i>Straight Ahead: {{waypoint.streetname}}
-                                    </li>
-                                    <li *ngIf="waypoint.type === 'turn'">
-                                        <i class="fa-solid fa-arrows-left-right route-icon"></i>Turn to: {{waypoint.streetname}}
-                                    </li>
-                                    <li><i class="fa-solid fa-circle-dot addroute-gapmaker"></i></li>
-                                    <li><i class="fa-solid fa-circle-dot addroute-gapmaker"></i></li>
-                                </ng-container>
-                                <ng-container *ngIf="routeService.route.endpointStr === '0'; else checkEmpty">
-                                    <li><i class="fa-solid fa-location-dot route-icon"></i>End Point:
-                                </ng-container>
-                                <ng-template #checkEmpty>
-                                    <li *ngIf="routeService.route.endpointStr === ''; else displayEndpoint">
-                                        <i class="fa-solid fa-location-dot route-icon"></i>End Point: Unknown Road
-                                    </li>
-                                </ng-template>
-                                <ng-template #displayEndpoint>
-                                    <li><i class="fa-solid fa-location-dot route-icon"></i>End Point: {{ routeService.route.endpointStr }}</li>
-                                </ng-template>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="addroute-buttons">
-                        <div class="row">
-                            <div class="col text-start">
-                                <button type="button" class="btn btn-light">Reset</button>
-                            </div>
-                            <div class="col text-end">
-                                <button type="button" class="btn btn-success">Save Route</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-            </form>
-        </div>
+    <div class="addroutes-title">
+        <h1>Add Routes</h1>
     </div>
-    <div class="addroutes-map">
-        <app-map></app-map>
+    <div class="addroutes-description">
+        <p>
+            Be a part of our mission to guide newcomers and tourists by helping them navigate the city by adding Jeepney and Bus routes!
+        </p>
+    </div>
+    <div class="addroutes-controls">
+        <form action="">
+            <div class="input-group addroute-type">
+                <span class="input-group-text" id="basic-addon1">PUV Type&nbsp;<span class="required">*</span></span>
+                <select class="form-select form-select-lg" name="vehicleType" [(ngModel)]="route.vehicleType" (ngModelChange)="vehicleTypeChanged($event)" aria-label="Default select example">
+                    <option value="jeep">Jeepney</option>
+                    <option value="bus">Bus</option>
+                    </select>
+            </div>
+            <div *ngIf="route.vehicleType != ''" class="addroute-details">
+                <div *ngIf="route.vehicleType === 'bus'" class="form-floating">
+                    <input type="text" class="form-control addroute-name" id="busname" placeholder="Bus Name">
+                    <label for="busname">Bus Name <span class="required">*</span></label>
+                </div>
+                <div class="form-floating">
+                    <input type="text" class="form-control addroute-number" id="routenumber" placeholder="Route Number">
+                    <label for="routenumber">Route Number <span *ngIf="route.vehicleType === 'jeep'" class="required">*</span></label>
+                </div>
+            </div>
+            <div class="addroute-route">
+                <div *ngIf="!getStartStreetName()" class="addroute-nostartingpoint">
+                    <p>Right Click on the map to start adding a route</p>
+                </div>
+                <div *ngIf="getStartStreetName() as startstreet" class="addroute-itenerary">
+                    <h4>Route:</h4>
+                    <ul>
+                        <li><i class="fa-solid fa-location-dot route-icon"></i>Starting Point: {{startstreet}}</li>
+                        <li><i class="fa-solid fa-circle-dot addroute-gapmaker"></i></li>
+                        <ng-container *ngFor="let waypoint of getMarkers()">
+                            <i class="fa-regular fa-circle-dot route-icon"></i>{{waypoint.streetname}}
+                            <li><i class="fa-solid fa-circle-dot addroute-gapmaker"></i></li>
+                        </ng-container>
+                        <li *ngIf="!getEndStreetName()"><i class="fa-solid fa-location-dot route-icon"></i>End Point:
+                        <li *ngIf="getEndStreetName() as endstreet"><i class="fa-solid fa-location-dot route-icon"></i>End Point: {{ endstreet }}</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="addroute-buttons">
+                <div class="row">
+                    <div class="col text-start">
+                        <button type="button" class="btn btn-light" (click)="reset()">Reset</button>
+                    </div>
+                    <div class="col text-end">
+                        <button type="button" class="btn btn-success">Save Route</button>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
 </div>

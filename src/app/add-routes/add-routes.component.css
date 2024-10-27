@@ -1,12 +1,6 @@
-.addroutes-sidebar {
-    position: absolute;
-    z-index: 1000;
-    
-    background-color: rgba(255,255,255,0.8);
-    height: 800px;
-    width: 30%;
-    padding: 20px;
-    overflow-y:scroll;
+.addroutes {
+    height: 100%;
+    width: 100%;
 }
 
 .addroute-type {
@@ -43,10 +37,5 @@
 
 .addroute-buttons {
     margin-top: 20px;
-}
-
-.addroutes-map {
-    width: 100%;
-    height: 800px;
-    overflow: hidden;
+    margin-bottom: 20px;
 }

@@ -1,19 +1,31 @@
-<div class="header-nav">
-    <h1>GoCommute</h1>
-    <ul class="nav nav-pills">
-        <li class="nav-item">
-            <a routerLink="/" href="#" class="nav-link"><i class="fa-solid fa-house"></i></a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" routerLink="/addroutes" href="#">Add Routes</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" routerLink="/verifyroutes" href="#">Verify Routes</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" routerLink="/findroutes" href="#">Find Routes</a>
-        </li>
-    </ul>
+<div class="row header-nav">
+    <div class="col-9">
+        <h1>GoCommute</h1>
+    </div>
+    <div class="col-3">
+        <div class="nav-wrapper">
+            <ul class="nav nav-pills">
+                <li class="nav-item">
+                    <a class="nav-link" routerLink="/findroutes" href="#">Find Routes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" routerLink="/addroutes" href="#">Add Routes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" routerLink="/verifyroutes" href="#">Verify Routes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" routerLink="/about" href="#">About</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    
 </div>
-
-<router-outlet></router-outlet>
+<div class="row main-content">
+    <app-map></app-map>
+    <div class="sidebar">
+        <router-outlet></router-outlet>
+    </div>
+</div>
