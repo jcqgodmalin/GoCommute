@@ -9,6 +9,12 @@
   width: 100%;
 }
 
+.map-loading {
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+}
+
 .context-menu {
   display: none;
   position: absolute;
@@ -32,6 +38,8 @@
 .context-menu ul li:hover {
   background: #eee;
 }
+
+
 .popover-content {
   background-color: #fff;
   padding: 10px;

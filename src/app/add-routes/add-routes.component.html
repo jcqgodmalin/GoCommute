@@ -1,6 +1,6 @@
 <div class="addroutes">
     <div class="addroutes-title">
-        <h1>Add Routes</h1>
+        <h1>Add Route</h1>
     </div>
     <div class="addroutes-description">
         <p>
@@ -27,22 +27,32 @@
                 </div>
             </div>
             <div class="addroute-route">
-                <div *ngIf="!getStartStreetName()" class="addroute-nostartingpoint">
-                    <p>Right Click on the map to start adding a route</p>
-                </div>
-                <div *ngIf="getStartStreetName() as startstreet" class="addroute-itenerary">
-                    <h4>Route:</h4>
-                    <ul>
-                        <li><i class="fa-solid fa-location-dot route-icon"></i>Starting Point: {{startstreet}}</li>
-                        <li><i class="fa-solid fa-circle-dot addroute-gapmaker"></i></li>
-                        <ng-container *ngFor="let waypoint of getMarkers()">
-                            <i class="fa-regular fa-circle-dot route-icon"></i>{{waypoint.streetname}}
-                            <li><i class="fa-solid fa-circle-dot addroute-gapmaker"></i></li>
-                        </ng-container>
-                        <li *ngIf="!getEndStreetName()"><i class="fa-solid fa-location-dot route-icon"></i>End Point:
-                        <li *ngIf="getEndStreetName() as endstreet"><i class="fa-solid fa-location-dot route-icon"></i>End Point: {{ endstreet }}</li>
-                    </ul>
-                </div>
+                <ng-container *ngIf="(this.route.markers!.length < 1); else displayItenerary">
+                    <div  class="addroute-nostartingpoint">
+                        <p>Right Click on the map to start adding a route</p>
+                    </div>
+                </ng-container>
+                <ng-template #displayItenerary>
+                    <div cdkDropList (cdkDropListDropped)="draggeddrop($event)" class="addroute-itenerary">
+                        <h4>Route:</h4>
+                        <ul>
+                            <ng-container *ngFor="let marker of route.markers; let i = index">
+                                <ng-container *ngIf="i === 0">
+                                    <li (mouseenter)="markerHovered(marker)"
+                                    (click)="markerClicked(marker)" cdkDrag><span class="marker"><i class="fa-solid fa-map-pin route-icon"></i>{{marker.streetname}}</span></li>
+                                </ng-container> 
+                                <ng-container *ngIf="route.markers!.length > 1 && i === route.markers!.length - 1">
+                                    <li (mouseenter)="markerHovered(marker)"
+                                    (click)="markerClicked(marker)" cdkDrag><span class="marker"><i class="fa-solid fa-map-pin route-icon"></i>{{marker.streetname}}</span></li>
+                                </ng-container>
+                                <ng-container *ngIf="i !== 0 && i !== (route.markers!.length - 1)">
+                                    <li (mouseenter)="markerHovered(marker)"
+                                    (click)="markerClicked(marker)" cdkDrag><span class="marker"><i class="fa-regular fa-circle-dot waypoint"></i>{{marker.streetname}}</span></li>
+                                </ng-container>
+                            </ng-container>
+                        </ul>
+                    </div>
+                </ng-template>
             </div>
             <div class="addroute-buttons">
                 <div class="row">

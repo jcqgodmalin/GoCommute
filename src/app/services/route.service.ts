@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { RouteModel } from '../models/route-model.model';
+import { MarkerModel } from '../models/marker-model.model';
 import { BehaviorSubject } from 'rxjs';
-import { Route } from '@angular/router';
-import { LatLngExpression } from 'leaflet';
+import { LatLngExpression, Marker } from 'leaflet';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +11,6 @@ export class RouteService {
   public route : RouteModel = {
     vehicleType : '',
     markers: [],
-    polyline: undefined,
     isReset: false
   }
   private routeSubject = new BehaviorSubject<RouteModel>(this.route);
@@ -34,42 +33,64 @@ export class RouteService {
   generateLatLngForPolyline() : Promise<LatLngExpression[]> {
 
     return new Promise((resolve,reject) => {
-      const start = this.route.markers?.find(start => start.type === 'start');
-      const end = this.route.markers?.find(end => end.type === 'end');
-      const waypoints = this.route.markers?.filter(waypoints => waypoints.type === 'marker');
+      if(this.route.markers){
+        if(this.route.markers.length > 1){
 
-      if(waypoints && !start || !end){
-        reject();
-      }
+          const markersCount = this.route.markers.length;
+          let start! : MarkerModel;
+          let waypoints : MarkerModel[] = [];
+          let end! : MarkerModel;
 
-      const wayPointStr = waypoints?.map(point => `${point.latlng.lng},${point.latlng.lat}`).join(';');
-      let queryParam;
-      if(wayPointStr){
-        queryParam = `${start.latlng.lng},${start.latlng.lat};${wayPointStr};${end.latlng.lng},${end.latlng.lat}`;
-      }else{
-        queryParam = `${start.latlng.lng},${start.latlng.lat};${end.latlng.lng},${end.latlng.lat}`;
-      }
+          this.route.markers.forEach((marker: MarkerModel,index : number) => {
 
-      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${queryParam}?overview=full`;
-      fetch(osrmUrl)
-      .then(response => {
-        if(!response.ok){
-          throw new Error('Unable to reach the server');
+            if(index === 0){
+              start = marker;
+            }else if(index === markersCount - 1){
+              end = marker;
+            }else if(index !== 0 && index !== markersCount -1){
+              waypoints.push(marker);
+            }
+
+          });
+
+          //check if waypoints array is populated. If yes, populate the waypointString
+          let waypointsString;
+          if(waypoints.length > 0){
+            waypointsString = waypoints.map(waypoint => `${waypoint.mapMarker.getLatLng().lng},${waypoint.mapMarker.getLatLng().lat}`).join(';');
+          }
+
+          //compose the query parameter to  osrm
+          let osrmQueryParameter! : string;
+          if(start && end){
+            if(waypointsString){
+              osrmQueryParameter = `${start.mapMarker.getLatLng().lng},${start.mapMarker.getLatLng().lat};${waypointsString};${end.mapMarker.getLatLng().lng},${end.mapMarker.getLatLng().lat}`;
+            }else{
+              osrmQueryParameter = `${start.mapMarker.getLatLng().lng},${start.mapMarker.getLatLng().lat};${end.mapMarker.getLatLng().lng},${end.mapMarker.getLatLng().lat}`;
+            }
+          }else{
+            reject();
+          }
+
+          //call osrm
+          const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${osrmQueryParameter}?overview=full`;
+          fetch(osrmUrl).then(response => {
+            if(!response.ok){
+              throw new Error('Unable to reach the OSRM server');
+            }
+            return response.json();
+          }).then(data => {
+            if(data.routes && Array.isArray(data.routes) && data.routes.length > 0){
+              const route = data.routes[0];
+              const coordinates = this.decodePolyline(route.geometry);
+              resolve(coordinates.map(coord => [coord.lat, coord.lng]));
+            }else{
+              throw new Error('No route found');
+            }
+          }).catch(error => {
+            reject(error);
+          });
         }
-        return response.json();
-      })
-      .then(data => {
-        if(data.routes && Array.isArray(data.routes) && data.routes.length > 0){
-          const route = data.routes[0];
-          const coordinates = this.decodePolyline(route.geometry);
-          resolve(coordinates.map(coord => [coord.lat, coord.lng]));
-        }else{
-          throw new Error('No route found');
-        }
-      })
-      .catch(error => {
-        reject(error);
-      });
+      }
     });
   }
 

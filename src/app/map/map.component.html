@@ -1,11 +1,13 @@
+<div class="mapLoading" *ngIf="mapLoading">
+  
+</div>
 <div id="map"></div>
+
 
 <!-- Context Menu -->
 <div id="map-context-menu" class="context-menu">
     <ul>
-      <li (click)="addMarker('start')"><i class="fa-solid fa-location-dot"></i> Add Starting Point</li>
-      <li (click)="addMarker('marker')"><i class="fa-regular fa-circle-dot"></i> Add Marker</li>
-      <li (click)="addMarker('end')"><i class="fa-solid fa-location-dot"></i> Add End Point</li>
+      <li (click)="addMarker()"><i class="fa-regular fa-circle-dot"></i> Add Marker</li>
     </ul>
   </div>
 

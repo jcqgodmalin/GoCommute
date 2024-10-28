@@ -2,13 +2,16 @@ import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, Renderer2, Vie
 import * as L from 'leaflet';
 import { RouteService } from '../services/route.service';
 import { RouteModel } from '../models/route-model.model';
-import { LatLng, LatLngExpression } from 'leaflet';
+import { LatLng } from 'leaflet';
 import { Subscription } from 'rxjs';
+import { MarkerModel } from '../models/marker-model.model';
+import { MarkerService } from '../services/marker.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './map.component.html',
   styleUrl: './map.component.css'
 })
@@ -16,14 +19,19 @@ export class MapComponent implements AfterViewInit {
   @ViewChild('popoverContent', { static: false }) popoverContent!: ElementRef;
 
   private map!: L.Map;
+  mapLoading = false;
   private contextMenu!: HTMLElement;
   private selectedLatLng!: L.LatLng;
   public selectedMarker : {lat: number, lng: number, name: string} | null = null;
+  private polyline : any;
+  private currentPopUp : L.Popup | null = null;
 
   private route! : RouteModel;
   private routeSubscriber!: Subscription;
 
-  constructor(private renderer: Renderer2, private routeService : RouteService, private cdr: ChangeDetectorRef) {}
+  private markerSubscriber!: Subscription;
+
+  constructor(private renderer: Renderer2, private routeService : RouteService,private markerService : MarkerService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.routeSubscriber = this.routeService.route$.subscribe((route) => {
@@ -34,6 +42,18 @@ export class MapComponent implements AfterViewInit {
         this.updateMap();
       }
     });
+    this.markerSubscriber = this.markerService.markerClicked$.subscribe(marker => {
+        //do something when a marker is clicked
+        this.onMarkerClick(marker.mapMarker,marker.mapMarker.getLatLng(), marker.streetname);
+    });
+    this.markerSubscriber.add(this.markerService.markerHovered$.subscribe(marker => {
+      //do something when a marker is hovered
+    }));
+  }
+
+  ngOnDestroy() {
+    this.routeSubscriber.unsubscribe();
+    this.markerSubscriber.unsubscribe();
   }
 
   ngAfterViewInit() : void {
@@ -46,6 +66,9 @@ export class MapComponent implements AfterViewInit {
   }
 
   initializeMap() : void {
+    this.mapLoading = true;
+    this.cdr.detectChanges();
+
     this.map = L.map('map',{zoomControl: false}).setView([14.5995, 120.9842], 12);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -59,32 +82,73 @@ export class MapComponent implements AfterViewInit {
       event.originalEvent.preventDefault();
       this.showContextMenu(event);
     })
+
+    setTimeout(() => {
+      this.mapLoading = false
+      this.cdr.detectChanges();
+    }, 10000);
   }
 
   private updateMap() : void {
+    this.mapLoading = true;
     this.clearMap();
 
     //display markers
-    this.route.markers?.forEach((marker) => {
-      this.map.addLayer(marker.marker);
-    })
+    const startIcon: L.Icon = L.icon({
+      iconUrl: 'assets/icons/map-pin-start.svg', 
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+    const endIcon: L.Icon = L.icon({
+      iconUrl: 'assets/icons/map-pin-end.svg', 
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+    const waypointIcon: L.Icon = L.icon({
+      iconUrl: 'assets/icons/circle-dot-regular.svg', 
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    });
 
+    
+    if(this.route.markers){
+      const markerCount = this.route.markers?.length;
+      this.route.markers?.forEach((marker: MarkerModel, index: number) => {
+        if(index === 0){
+          marker.mapMarker.setIcon(startIcon);
+        }else if(index === (markerCount - 1)){
+          marker.mapMarker.setIcon(endIcon);
+        }else{
+          marker.mapMarker.setIcon(waypointIcon);
+        }
+        this.map.addLayer(marker.mapMarker);
+      })
+    }
+    
     //display polyline
     this.drawRouteLine();
+
+    this.mapLoading = false;
   }
 
   private clearMap() : void {
+    this.mapLoading = true;
     //remove markers
     this.route.markers?.forEach((marker,index) => {
-      if(this.map.hasLayer(marker.marker)){
-        this.map.removeLayer(marker.marker);
+      if(this.map.hasLayer(marker.mapMarker)){
+        this.map.removeLayer(marker.mapMarker);
       }
     });
     //remove polyline
-    if(this.route.polyline && this.map.hasLayer(this.route.polyline)){
-      this.map.removeLayer(this.route.polyline);
-      this.route.polyline = undefined;
+    if(this.polyline && this.map.hasLayer(this.polyline)){
+      this.map.removeLayer(this.polyline);
+      this.polyline = undefined;
     }
+
+    if(this.currentPopUp){
+      this.map.closePopup();
+    }
+    this.mapLoading = false;
   }
 
   showContextMenu(event : L.LeafletMouseEvent) : void {
@@ -95,131 +159,53 @@ export class MapComponent implements AfterViewInit {
     });
 
     // Get the position of the right-click event
-    const { containerPoint } = event;
-    const { x, y } = containerPoint;
+    // const { containerPoint } = event;
+    // const { x, y } = containerPoint;
+
+    const { clientX, clientY } = event.originalEvent;
 
     // Show the context menu at the click position
     this.contextMenu.style.display = 'block';
-    this.contextMenu.style.left = `${x}px`;
-    this.contextMenu.style.top = `${y}px`;
+    this.contextMenu.style.left = `${clientX}px`;
+    this.contextMenu.style.top = `${clientY}px`;
   }
 
   hideContextMenu(): void {
     this.contextMenu.style.display = 'none';
   }
 
-  addMarker(marker : string) : void {
-    if(this.selectedLatLng){
-      switch(marker){
-        case 'start':
-          const startMarker = L.marker(this.selectedLatLng, {
-            icon: L.icon({
-              iconUrl: 'assets/icons/location-dot-solid.svg',
-              iconSize: [24,24],
-              iconAnchor: [12,12]
-            }),
-            draggable: true
-          });
-          const startPin = {
-            'type': 'start',
-            'streetname': '',
-            'latlng': this.selectedLatLng,
-            'marker': startMarker
-          };
-          this.getStreetName(this.selectedLatLng)
-          .then(streetName => {
-            startPin.streetname = streetName;
-            startPin.marker.on('click', () => this.onMarkerClick(startPin.marker,startPin.marker.getLatLng(),startPin.streetname));
-            startPin.marker.on('dragend', (event) => {
-              const markerDragged = event.target;
-              const newPosition = markerDragged.getLatLng();
-              this.getStreetName(newPosition)
-              .then(newStreetName => { 
-                startPin.streetname = newStreetName; 
-                startPin.latlng = newPosition; 
-                this.routeService.updateRoute(this.route);
-              });
-            })
-            this.route.markers?.push(startPin);
+  addMarker() : void {
+    const startMarker = L.marker(this.selectedLatLng, {
+      icon: L.icon({
+        iconUrl: 'assets/icons/location-dot-solid.svg',
+        iconSize: [24,24],
+        iconAnchor: [12,12]
+      }),
+      draggable: true
+    });
+    const startPin : MarkerModel = {
+      'streetname': '',
+      'mapMarker': startMarker
+    };
+    this.getStreetName(this.selectedLatLng).then(streetName => {
+      startPin.streetname = streetName;
+      startPin.mapMarker.on('click', () => this.onMarkerClick(startPin.mapMarker,startPin.mapMarker.getLatLng(),startPin.streetname));
+      startPin.mapMarker.on('dragend', (event) => {
+        const markerDragged = event.target;
+        const newPosition = markerDragged.getLatLng();
+        this.getNearestRoad(newPosition.lat,newPosition.lng).then(latlng => {
+          this.getStreetName(latlng).then(newStreetName => {
+            startPin.streetname = newStreetName;
+            startPin.mapMarker.setLatLng(latlng);
             this.routeService.updateRoute(this.route);
-          })
-          .catch(error => {
-            console.log("Error:",error);
           });
-          break;
-        case 'marker':
-          const markermarker = L.marker(this.selectedLatLng, {
-            icon: L.icon({
-              iconUrl: 'assets/icons/circle-dot-regular.svg',
-              iconSize: [12,12],
-              iconAnchor: [6,6]
-            }),
-            draggable: true
-          });
-          const markerpin = {
-            'type': 'marker',
-            'streetname': '',
-            'latlng': this.selectedLatLng,
-            'marker': markermarker
-          };
-          this.getStreetName(this.selectedLatLng).then(streetName => {
-            markerpin.streetname = streetName;
-            markerpin.marker.on('click', () => this.onMarkerClick(markerpin.marker,markerpin.marker.getLatLng(),markerpin.streetname));
-            markerpin.marker.on('dragend', (event) => {
-              const markerDragged = event.target;
-              const newPosition = markerDragged.getLatLng();
-              this.getStreetName(newPosition).then(newStreetName => {
-                markerpin.streetname = newStreetName;
-                markerpin.latlng = newPosition;
-                this.routeService.updateRoute(this.route);
-              })
-            })
-            this.route.markers?.push(markerpin);
-            this.routeService.updateRoute(this.route);
-          }).catch(error => {
-            console.log("Error:",error);
-          });
-          break;
-        case 'end':
-          const endMarker = L.marker(this.selectedLatLng, {
-            icon: L.icon({
-              iconUrl: 'assets/icons/location-dot-solid.svg',
-              iconSize: [24,24],
-              iconAnchor: [12,12]
-            }),
-            draggable: true
-          });
-          const endPin = {
-            'type': 'end',
-            'streetname': '',
-            'latlng': this.selectedLatLng,
-            'marker': endMarker
-          };
-          this.getStreetName(this.selectedLatLng)
-          .then(streetName => {
-            endPin.streetname = streetName;
-            endPin.marker.on('click', () => this.onMarkerClick(endPin.marker,endPin.marker.getLatLng(),endPin.streetname));
-            endPin.marker.on('dragend', (event) => {
-              const markerDragged = event.target;
-              const newPosition = markerDragged.getLatLng();
-              this.getStreetName(newPosition).then(newStreetName => {
-                endPin.streetname = newStreetName;
-                endPin.latlng = newPosition;
-                this.routeService.updateRoute(this.route);
-              });
-            })
-            this.route.markers?.push(endPin);
-            this.routeService.updateRoute(this.route);
-          })
-          .catch(error => {
-            console.log("Error:",error);
-          });
-          break;
-        default:
-          break;
-      }
-      console.log('Current Markers:',this.route.markers);
-    }
+        });
+      });
+      this.route.markers?.push(startPin);
+      this.routeService.updateRoute(this.route);
+    }).catch(error => {
+      console.log("Error:",error);
+    });
     this.hideContextMenu();
   }
 
@@ -274,10 +260,10 @@ export class MapComponent implements AfterViewInit {
   private drawRouteLine() : void {
     this.routeService.generateLatLngForPolyline()
     .then(latlngs => {
-      this.route.polyline = L.polyline(latlngs, {color: 'blue'});
-      if(this.route.polyline){
-        this.map.addLayer(this.route.polyline);
-        this.map.fitBounds(this.route.polyline.getBounds());
+      this.polyline = L.polyline(latlngs, {color: 'blue'});
+      if(this.polyline){
+        this.map.addLayer(this.polyline);
+        this.map.fitBounds(this.polyline.getBounds());
       }
     }).catch(error => {
     });
@@ -327,10 +313,7 @@ export class MapComponent implements AfterViewInit {
     removeButton.style.marginTop = '10px';
 
     removeButton.addEventListener('click',() => {
-      console.log('Selected Marker:',marker); 
-      console.log('Markers before deleting 1:',this.route.markers);
-      this.route.markers = this.route.markers?.filter(data => data.marker !== marker);
-      console.log('Markers after deleting 1:',this.route.markers);
+      this.route.markers = this.route.markers?.filter(data => data.mapMarker !== marker);
       this.routeService.updateRoute(this.route);
       this.map.removeLayer(marker);
       this.map.closePopup();
@@ -344,7 +327,7 @@ export class MapComponent implements AfterViewInit {
     this.map.closePopup();
 
     // Use Leaflet's L.popup to bind the content to the map at the specified location
-    const popup = L.popup({
+    this.currentPopUp = L.popup({
       closeButton: false,
       autoClose: true,
       closeOnClick: false,
@@ -360,7 +343,6 @@ export class MapComponent implements AfterViewInit {
         navigator.geolocation.getCurrentPosition(position => {
             const userLat = position.coords.latitude;
             const userLng = position.coords.longitude;
-            console.log(`User's location: ${userLat}, ${userLng}`);
 
             // Center the map on the user's location
             this.map.setView([userLat, userLng], 18);
