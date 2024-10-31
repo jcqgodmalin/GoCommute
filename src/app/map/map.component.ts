@@ -158,10 +158,6 @@ export class MapComponent implements AfterViewInit {
       console.log("Error: ",error);
     });
 
-    // Get the position of the right-click event
-    // const { containerPoint } = event;
-    // const { x, y } = containerPoint;
-
     const { clientX, clientY } = event.originalEvent;
 
     // Show the context menu at the click position
@@ -175,17 +171,12 @@ export class MapComponent implements AfterViewInit {
   }
 
   addMarker() : void {
-    const startMarker = L.marker(this.selectedLatLng, {
-      icon: L.icon({
-        iconUrl: 'assets/icons/location-dot-solid.svg',
-        iconSize: [24,24],
-        iconAnchor: [12,12]
-      }),
+    const marker = L.marker(this.selectedLatLng, {
       draggable: true
     });
     const startPin : MarkerModel = {
       'streetname': '',
-      'mapMarker': startMarker
+      'mapMarker': marker
     };
     this.getStreetName(this.selectedLatLng).then(streetName => {
       startPin.streetname = streetName;
@@ -276,7 +267,6 @@ export class MapComponent implements AfterViewInit {
       name: name
     };
 
-     // Force Angular to detect changes
     this.cdr.detectChanges();
 
     this.showPopover(marker,latlng);
@@ -285,11 +275,10 @@ export class MapComponent implements AfterViewInit {
   private showPopover(marker: L.Marker, latlng: LatLng): void {
     if (!this.popoverContent) return;
 
-    // Create a div to hold the popover content
     const popoverDiv = this.popoverContent.nativeElement.cloneNode(true);
     popoverDiv.style.display = 'block';
 
-    // Add a custom close button
+    // Custom Close button
     const closeButton = document.createElement('button');
     closeButton.innerHTML = '&times;'; 
     closeButton.className = 'custom-close-btn btn btn-sm';
@@ -306,7 +295,7 @@ export class MapComponent implements AfterViewInit {
       this.map.closePopup();
     });
 
-    // Add a custom close button
+    // Custom Remove button
     const removeButton = document.createElement('button');
     removeButton.textContent = 'Remove';
     removeButton.className = 'btn btn-sm btn-danger'; // Use Bootstrap classes for styling

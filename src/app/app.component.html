@@ -25,7 +25,8 @@
 </div>
 <div class="row main-content">
     <app-map></app-map>
-    <div class="sidebar">
+    <div class="sidebar" [ngClass]="{'sidebar-mobile' : isMobileDevice}" [ngStyle]=" isMobileDevice ? {height : splitterHeight + 'px'} : {height : '90%'}">
+        <div *ngIf="isMobileDevice" class="resizer" (mousedown)="onMouseDown($event)" (touchstart)="onMouseDown($event)"> - </div>
         <router-outlet></router-outlet>
     </div>
 </div>
