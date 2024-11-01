@@ -11,6 +11,7 @@ import { BreakpointObserverService } from '../services/breakpoint-observer.servi
 import { Router } from '@angular/router';
 import { CommuteService } from '../services/commute.service';
 import { CommuteModel } from '../models/commute-model.model';
+import { BackendServiceService } from '../services/backend-service.service';
 
 @Component({
   selector: 'app-map',
@@ -50,7 +51,8 @@ export class MapComponent implements AfterViewInit {
     private cdr: ChangeDetectorRef,
     private deviceObserver : BreakpointObserverService,
     private router : Router,
-    private commuteService : CommuteService
+    private commuteService : CommuteService,
+    private backendService : BackendServiceService
   ) {
     
     this.deviceObserver.isMobile$.subscribe(result=>{
@@ -67,7 +69,6 @@ export class MapComponent implements AfterViewInit {
       this.route = route;
       if(this.route.isReset){
         this.clearMap();
-        console.log("Route object in Map Component",this.route);
       }else{
         this.updateMap();
       }
@@ -79,6 +80,12 @@ export class MapComponent implements AfterViewInit {
     // this.markerSubscriber.add(this.markerService.markerHovered$.subscribe(marker => {
     //   //do something when a marker is hovered
     // }));
+    this.commuteSubscriber = this.commuteService.commute$.subscribe(commute => {
+      this.commute = commute;
+      if(this.commute.userDestinationLat > 0 && this.commute.userLocationLat > 0 && this.commute.recommendRoutes.length < 1){
+        this.findRoute();
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -98,10 +105,6 @@ export class MapComponent implements AfterViewInit {
       if(useLocation){
         this.centerOnUserLocation(true);
       }
-    });
-
-    this.commuteSubscriber = this.commuteService.commute$.subscribe(commute => {
-      this.commute = commute;
     });
   }
 
@@ -252,16 +255,42 @@ export class MapComponent implements AfterViewInit {
     this.hideContextMenu();
   }
 
-  setAsDestination() : void {
-    console.log('Destination set in: ' + this.selectedLatLng);
+  setAsStartingPoint() : void {
     this.getNearestRoad(this.selectedLatLng.lat,this.selectedLatLng.lng).then(nearestLatLng => {
-      this.commute.userDestinationLat = nearestLatLng.lat;
-      this.commute.userDestinationLng = nearestLatLng.lng;
+      this.getStreetName(nearestLatLng).then(streetName => {
+        this.commute.userLocationLat = nearestLatLng.lat;
+        this.commute.userLocationLng = nearestLatLng.lng;
+        this.commute.userLocationStreetName = streetName;
+        const marker = L.marker(nearestLatLng,{
+          icon: L.icon({
+            iconUrl: 'assets/icons/map-pin-start.svg',
+            iconSize: [24,24],
+            iconAnchor: [12,12]
+          })
+        }).addTo(this.map);
+        this.markerMapping.set(`${nearestLatLng.lat},${nearestLatLng.lng}`,marker);
+        this.commuteService.updateCommute(this.commute);
+      });
     });
   }
 
-  setAsStartingPoint() : void {
-    console.log('Starting Point set to : ' + this.selectedLatLng);
+  setAsDestination() : void {
+    this.getNearestRoad(this.selectedLatLng.lat,this.selectedLatLng.lng).then(nearestLatLng => {
+      this.getStreetName(nearestLatLng).then(streetName => {
+        this.commute.userDestinationLat = nearestLatLng.lat;
+        this.commute.userDestinationLng = nearestLatLng.lng;
+        this.commute.userDestinationStreetName = streetName;
+        const marker = L.marker(nearestLatLng,{
+          icon: L.icon({
+            iconUrl: 'assets/icons/map-pin-end.svg',
+            iconSize: [24,24],
+            iconAnchor: [12,12]
+          })
+        }).addTo(this.map);
+        this.markerMapping.set(`${nearestLatLng.lat},${nearestLatLng.lng}`,marker);
+        this.commuteService.updateCommute(this.commute);
+      });
+    });
   }
 
   private onMarkerDragEnd(marker : L.Marker, oldLat: number, oldLng: number){
@@ -352,6 +381,16 @@ export class MapComponent implements AfterViewInit {
     });
   }
 
+  private findRoute() : void {
+    const startPoint : L.LatLngExpression = [this.commute.userLocationLat,this.commute.userLocationLng];
+    const destination : L.LatLngExpression = [this.commute.userDestinationLat,this.commute.userDestinationLng];
+    if(Array.isArray(startPoint) && Array.isArray(destination)){
+      const bestRoute = this.backendService.findRecommendedRoute(startPoint,destination);
+      this.commute.recommendRoutes.push(bestRoute);
+      this.commuteService.updateCommute(this.commute);
+    }
+  }
+
   onMarkerClick(marker: L.Marker, latlng: LatLng, name: string): void {
     this.selectedMarker = {
       lat: latlng.lat,
@@ -419,29 +458,34 @@ export class MapComponent implements AfterViewInit {
     .openOn(this.map);
   }
 
-  centerOnUserLocation(addPin : boolean) : void {
+  centerOnUserLocation(findRoute : boolean) : void {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(position => {
             const userLat = position.coords.latitude;
             const userLng = position.coords.longitude;
 
-            this.commute.userLocationLat = userLat;
-            this.commute.userLocationLng = userLng;
-
             // Center the map on the user's location
             this.map.setView([userLat, userLng], 18);
 
-            if(addPin){
-              console.log('Add Pin');
-              L.marker([userLat,userLng],{
-                icon: L.icon({
-                  iconUrl: 'assets/icons/circle-dot-regular-blue.svg',
-                  iconSize: [24,24],
-                  iconAnchor: [12,12]
-                })
-              }).addTo(this.map);
-            }else{
-              console.log("Don't add Pin");
+            if(findRoute){
+              this.getNearestRoad(userLat,userLng).then(latlng => {
+                this.getStreetName(latlng).then(streetName => {
+                  this.commute.userLocationLat = latlng.lat;
+                  this.commute.userLocationLng = latlng.lng;
+                  this.commute.userLocationStreetName = streetName;
+
+                  const marker = L.marker([userLat,userLng],{
+                    icon: L.icon({
+                      iconUrl: 'assets/icons/circle-dot-regular-blue.svg',
+                      iconSize: [24,24],
+                      iconAnchor: [12,12]
+                    })
+                  }).addTo(this.map);
+
+                  this.markerMapping.set(`${latlng.lat},${latlng.lng}`,marker);
+                  this.commuteService.updateCommute(this.commute);
+                });
+              });
             }
         }, error => {
             console.error('Geolocation error:', error);

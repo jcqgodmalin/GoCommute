@@ -1,3 +1,8 @@
+.find-route-title {
+    border-bottom: 1px solid rgba(0,0,0,0.2);
+    margin-bottom: 30px;
+}
+
 .find-route > div:not(.find-route:last-child) {
     margin-bottom: 20px;
 }
@@ -7,11 +12,24 @@
     margin-bottom: 10px;
 }
 
+.location-switch > div > input {
+    cursor: pointer;
+}
+
 div.commute-itenerary > div {
-    border-left: 1px solid rgba(0,0,0,0.5);
+    border-left: 1px dotted rgba(0,0,0,0.2);
 }
 
 ul.commute-itenerary {
     list-style-type: none;
     padding: 10px;
+}
+
+ul.commute-itenerary > li:not(ul.commute-itenerary > li:last-child) {
+    margin-bottom: 10px;
+}
+
+#spinner {
+    width: 30px;
+    height: 30px;
 }

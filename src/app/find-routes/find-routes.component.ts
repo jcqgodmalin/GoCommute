@@ -17,11 +17,19 @@ export class FindRoutesComponent {
   useUserLocationAsStartingPoint : boolean = false;
   commute! : CommuteModel;
 
+  isFindingRoute: boolean = false;
+
   private commuteSubscriber! : Subscription;
 
   constructor(private commuteService : CommuteService) {
     this.commuteSubscriber = this.commuteService.commute$.subscribe(commute => {
       this.commute = commute;
+      if(this.commute.userDestinationLat > 0 && this.commute.userLocationLat > 0){
+        this.isFindingRoute = true;
+        if(this.commute.recommendRoutes){
+          this.isFindingRoute = false;
+        }
+      }
     })
   }
 

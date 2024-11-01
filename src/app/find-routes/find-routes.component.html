@@ -1,6 +1,7 @@
 <div class="find-route">
+    <h1 class="find-route-title">Find Route</h1>
     <div class="find-route-starting">
-        <h1>Starting Point</h1>
+        <h2>Starting Point</h2>
         <p *ngIf="!useUserLocationAsStartingPoint"><i class="fa-solid fa-circle-info"></i> Right click on the map to set your starting point</p>
         <div class="location-switch">
             <div class="form-check form-switch">
@@ -10,7 +11,7 @@
         </div>
     </div>
     <div class="find-route-destination">
-        <h1>Destination</h1>
+        <h2>Destination</h2>
         <p><i class="fa-solid fa-circle-info"></i> Find a destination or set a destination marker on the map</p>
         <div class="input-group">
             <input type="text" class="form-control" id="autoSizingInputGroup" #searchBtn placeholder="Enter your destination">
@@ -18,12 +19,20 @@
         </div>    
     </div>
     <div class="commute-itenerary">
-        <h1>Your Itenerary</h1>
+        <h2>Your Itenerary</h2>
         <div *ngIf="(this.commute.userLocationLat !== 0) || (this.commute.userDestinationLat !== 0)">
             <ul class="commute-itenerary">
-                <li><i class="fa-solid fa-map-pin route-icon"></i> {{this.commute.userLocationLat + "," + this.commute.userLocationLng}}</li>
-                <li><i class="fa-solid fa-map-pin route-icon"></i> {{this.commute.userDestinationLat + "," + this.commute.userDestinationLng}}</li>
+                <li><i class="fa-solid fa-map-pin route-icon"></i> {{this.commute.userLocationStreetName}}</li>
+                <li><i class="fa-solid fa-map-pin route-icon"></i> {{this.commute.userDestinationStreetName}}</li>
             </ul>
         </div>
+    </div>
+    <div class="commute-recommended">
+        <h2>Recommended Jeep/Bus Routes</h2>
+        <p *ngIf="isFindingRoute"><img id="spinner" src='assets/icons/loading.gif'> Finding Routes...</p>
+        <p *ngIf="this.commute.recommendRoutes.length > 0">{{this.commute.recommendRoutes[0].busName}}</p>
+    </div>
+    <div class="commute-reset-button">
+        <button type="button" class="btn btn-light">Reset</button>
     </div>
 </div>
