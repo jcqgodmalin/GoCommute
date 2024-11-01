@@ -1,0 +1,17 @@
+.find-route > div:not(.find-route:last-child) {
+    margin-bottom: 20px;
+}
+
+.location-switch {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+div.commute-itenerary > div {
+    border-left: 1px solid rgba(0,0,0,0.5);
+}
+
+ul.commute-itenerary {
+    list-style-type: none;
+    padding: 10px;
+}

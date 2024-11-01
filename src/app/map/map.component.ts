@@ -9,6 +9,8 @@ import { MarkerService } from '../services/marker.service';
 import { CommonModule } from '@angular/common';
 import { BreakpointObserverService } from '../services/breakpoint-observer.service';
 import { Router } from '@angular/router';
+import { CommuteService } from '../services/commute.service';
+import { CommuteModel } from '../models/commute-model.model';
 
 @Component({
   selector: 'app-map',
@@ -22,6 +24,7 @@ export class MapComponent implements AfterViewInit {
 
   isMobileDevice: boolean = false;
   isAddRouteActive : boolean = false;
+  isFindRouteActive : boolean = false;
 
   private map!: L.Map;
   mapLoading = false;
@@ -33,16 +36,21 @@ export class MapComponent implements AfterViewInit {
   private markerMapping : Map<string, L.Marker> = new Map();
 
   private route! : RouteModel;
-  private routeSubscriber!: Subscription;
+  private commute! : CommuteModel;
 
+  private routeSubscriber!: Subscription;
   private markerSubscriber!: Subscription;
+  private useUserLocationSubscriber!: Subscription;
+  private commuteSubscriber!: Subscription;
 
   constructor(
     private renderer: Renderer2,
     private routeService : RouteService,
-    private markerService : MarkerService,private cdr: ChangeDetectorRef,
+    private markerService : MarkerService,
+    private cdr: ChangeDetectorRef,
     private deviceObserver : BreakpointObserverService,
-    private router : Router
+    private router : Router,
+    private commuteService : CommuteService
   ) {
     
     this.deviceObserver.isMobile$.subscribe(result=>{
@@ -53,11 +61,13 @@ export class MapComponent implements AfterViewInit {
   ngOnInit() {
     this.router.events.subscribe(() => {
       this.checkCurrentRoute();
-    })
+      this.clearMap();
+    });
     this.routeSubscriber = this.routeService.route$.subscribe((route) => {
       this.route = route;
       if(this.route.isReset){
         this.clearMap();
+        console.log("Route object in Map Component",this.route);
       }else{
         this.updateMap();
       }
@@ -83,10 +93,21 @@ export class MapComponent implements AfterViewInit {
     this.renderer.listen(document, 'click', () => {
       this.hideContextMenu();
     });
+
+    this.useUserLocationSubscriber = this.commuteService.useUserLocation$.subscribe(useLocation => {
+      if(useLocation){
+        this.centerOnUserLocation(true);
+      }
+    });
+
+    this.commuteSubscriber = this.commuteService.commute$.subscribe(commute => {
+      this.commute = commute;
+    });
   }
 
   checkCurrentRoute() : void {
     this.isAddRouteActive = this.router.url.includes('/addroutes');
+    this.isFindRouteActive = this.router.url.includes('/findroutes');
   }
 
   initializeMap() : void {
@@ -101,10 +122,8 @@ export class MapComponent implements AfterViewInit {
     }).addTo(this.map);
 
     this.map.on('contextmenu',(event : L.LeafletMouseEvent) => {
-      if(this.isAddRouteActive){
         event.originalEvent.preventDefault();
         this.showContextMenu(event);
-      }
     })
 
     setTimeout(() => {
@@ -231,6 +250,18 @@ export class MapComponent implements AfterViewInit {
       console.log("Error",error);
     });
     this.hideContextMenu();
+  }
+
+  setAsDestination() : void {
+    console.log('Destination set in: ' + this.selectedLatLng);
+    this.getNearestRoad(this.selectedLatLng.lat,this.selectedLatLng.lng).then(nearestLatLng => {
+      this.commute.userDestinationLat = nearestLatLng.lat;
+      this.commute.userDestinationLng = nearestLatLng.lng;
+    });
+  }
+
+  setAsStartingPoint() : void {
+    console.log('Starting Point set to : ' + this.selectedLatLng);
   }
 
   private onMarkerDragEnd(marker : L.Marker, oldLat: number, oldLng: number){
@@ -388,14 +419,30 @@ export class MapComponent implements AfterViewInit {
     .openOn(this.map);
   }
 
-  centerOnUserLocation() : void {
+  centerOnUserLocation(addPin : boolean) : void {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(position => {
             const userLat = position.coords.latitude;
             const userLng = position.coords.longitude;
 
+            this.commute.userLocationLat = userLat;
+            this.commute.userLocationLng = userLng;
+
             // Center the map on the user's location
             this.map.setView([userLat, userLng], 18);
+
+            if(addPin){
+              console.log('Add Pin');
+              L.marker([userLat,userLng],{
+                icon: L.icon({
+                  iconUrl: 'assets/icons/circle-dot-regular-blue.svg',
+                  iconSize: [24,24],
+                  iconAnchor: [12,12]
+                })
+              }).addTo(this.map);
+            }else{
+              console.log("Don't add Pin");
+            }
         }, error => {
             console.error('Geolocation error:', error);
         });

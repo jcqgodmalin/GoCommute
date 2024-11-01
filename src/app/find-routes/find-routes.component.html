@@ -1,5 +1,29 @@
-<div class="input-group">
-    
-    <input type="text" class="form-control" id="autoSizingInputGroup" #searchBtn placeholder="Enter your destination">
-    <div class="input-group-text" (click)="search(searchBtn.value)"><i class="fa-solid fa-magnifying-glass"></i></div>
-  </div>
+<div class="find-route">
+    <div class="find-route-starting">
+        <h1>Starting Point</h1>
+        <p *ngIf="!useUserLocationAsStartingPoint"><i class="fa-solid fa-circle-info"></i> Right click on the map to set your starting point</p>
+        <div class="location-switch">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" #locationSwitch id="flexSwitchCheckDefault" (change)="locationSwitched(locationSwitch.checked)">
+                <label class="form-check-label" for="flexSwitchCheckDefault">Use my location</label>
+            </div>
+        </div>
+    </div>
+    <div class="find-route-destination">
+        <h1>Destination</h1>
+        <p><i class="fa-solid fa-circle-info"></i> Find a destination or set a destination marker on the map</p>
+        <div class="input-group">
+            <input type="text" class="form-control" id="autoSizingInputGroup" #searchBtn placeholder="Enter your destination">
+            <div class="input-group-text" (click)="search(searchBtn.value)"><i class="fa-solid fa-magnifying-glass"></i></div>
+        </div>    
+    </div>
+    <div class="commute-itenerary">
+        <h1>Your Itenerary</h1>
+        <div *ngIf="(this.commute.userLocationLat !== 0) || (this.commute.userDestinationLat !== 0)">
+            <ul class="commute-itenerary">
+                <li><i class="fa-solid fa-map-pin route-icon"></i> {{this.commute.userLocationLat + "," + this.commute.userLocationLng}}</li>
+                <li><i class="fa-solid fa-map-pin route-icon"></i> {{this.commute.userDestinationLat + "," + this.commute.userDestinationLng}}</li>
+            </ul>
+        </div>
+    </div>
+</div>

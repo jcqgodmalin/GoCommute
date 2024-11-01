@@ -2,7 +2,7 @@
 
 <div class="user-location" [ngClass]="{
   'mobile-user-location' : isMobileDevice
-}" (click)="centerOnUserLocation()">
+}" (click)="centerOnUserLocation(false)">
   <i class="fa-solid fa-location-dot"></i>
 </div>
 
@@ -10,7 +10,9 @@
 <!-- Context Menu -->
 <div id="map-context-menu" class="context-menu">
     <ul>
-      <li (click)="addMarker()"><i class="fa-regular fa-circle-dot"></i> Add Marker</li>
+      <li (click)="addMarker()" *ngIf="isAddRouteActive"><i class="fa-regular fa-circle-dot"></i> Add Marker</li>
+      <li (click)="setAsStartingPoint()" *ngIf="isFindRouteActive">Set as Starting Point</li>
+      <li (click)="setAsDestination()" *ngIf="isFindRouteActive">Set as Destination</li>
     </ul>
   </div>
 

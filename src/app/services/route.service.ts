@@ -8,7 +8,7 @@ import { LatLngExpression, Marker } from 'leaflet';
   providedIn: 'root'
 })
 export class RouteService {
-  public route : RouteModel = {
+  private route : RouteModel = {
     vehicleType : '',
     markers: [],
     isReset: false
