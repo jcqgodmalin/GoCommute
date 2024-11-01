@@ -56,16 +56,16 @@ export class RouteService {
           //check if waypoints array is populated. If yes, populate the waypointString
           let waypointsString;
           if(waypoints.length > 0){
-            waypointsString = waypoints.map(waypoint => `${waypoint.mapMarker.getLatLng().lng},${waypoint.mapMarker.getLatLng().lat}`).join(';');
+            waypointsString = waypoints.map(waypoint => `${waypoint.lng},${waypoint.lat}`).join(';');
           }
 
           //compose the query parameter to  osrm
           let osrmQueryParameter! : string;
           if(start && end){
             if(waypointsString){
-              osrmQueryParameter = `${start.mapMarker.getLatLng().lng},${start.mapMarker.getLatLng().lat};${waypointsString};${end.mapMarker.getLatLng().lng},${end.mapMarker.getLatLng().lat}`;
+              osrmQueryParameter = `${start.lng},${start.lat};${waypointsString};${end.lng},${end.lat}`;
             }else{
-              osrmQueryParameter = `${start.mapMarker.getLatLng().lng},${start.mapMarker.getLatLng().lat};${end.mapMarker.getLatLng().lng},${end.mapMarker.getLatLng().lat}`;
+              osrmQueryParameter = `${start.lng},${start.lat};${end.lng},${end.lat}`;
             }
           }else{
             reject();

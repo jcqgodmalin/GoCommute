@@ -5,5 +5,5 @@ export interface RouteModel {
     busName?: string;
     routeNumber?: string;
     markers?: MarkerModel[];
-    isReset: boolean;
+    isReset?: boolean;
 }

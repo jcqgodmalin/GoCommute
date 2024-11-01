@@ -7,6 +7,9 @@ import { Subscription } from 'rxjs';
 import { MarkerModel } from '../models/marker-model.model';
 import { MarkerService } from '../services/marker.service';
 import { CommonModule } from '@angular/common';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { BreakpointObserverService } from '../services/breakpoint-observer.service';
+import { Route, Router } from '@angular/router';
 
 @Component({
   selector: 'app-map',
@@ -17,6 +20,9 @@ import { CommonModule } from '@angular/common';
 })
 export class MapComponent implements AfterViewInit {
   @ViewChild('popoverContent', { static: false }) popoverContent!: ElementRef;
+
+  isMobileDevice: boolean = false;
+  isAddRouteActive : boolean = false;
 
   private map!: L.Map;
   mapLoading = false;
@@ -31,9 +37,23 @@ export class MapComponent implements AfterViewInit {
 
   private markerSubscriber!: Subscription;
 
-  constructor(private renderer: Renderer2, private routeService : RouteService,private markerService : MarkerService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private renderer: Renderer2,
+    private routeService : RouteService,
+    private markerService : MarkerService,private cdr: ChangeDetectorRef,
+    private deviceObserver : BreakpointObserverService,
+    private router : Router
+  ) {
+    
+    this.deviceObserver.isMobile$.subscribe(result=>{
+      this.isMobileDevice = result;
+    })
+  }
 
   ngOnInit() {
+    this.router.events.subscribe(() => {
+      this.checkCurrentRoute();
+    })
     this.routeSubscriber = this.routeService.route$.subscribe((route) => {
       this.route = route;
       if(this.route.isReset){
@@ -42,13 +62,13 @@ export class MapComponent implements AfterViewInit {
         this.updateMap();
       }
     });
-    this.markerSubscriber = this.markerService.markerClicked$.subscribe(marker => {
-        //do something when a marker is clicked
-        this.onMarkerClick(marker.mapMarker,marker.mapMarker.getLatLng(), marker.streetname);
-    });
-    this.markerSubscriber.add(this.markerService.markerHovered$.subscribe(marker => {
-      //do something when a marker is hovered
-    }));
+    // this.markerSubscriber = this.markerService.markerClicked$.subscribe(marker => {
+    //     //do something when a marker is clicked
+    //     this.onMarkerClick(marker.mapMarker,marker.mapMarker.getLatLng(), marker.streetname);
+    // });
+    // this.markerSubscriber.add(this.markerService.markerHovered$.subscribe(marker => {
+    //   //do something when a marker is hovered
+    // }));
   }
 
   ngOnDestroy() {
@@ -65,6 +85,10 @@ export class MapComponent implements AfterViewInit {
     });
   }
 
+  checkCurrentRoute() : void {
+    this.isAddRouteActive = this.router.url.includes('/addroutes');
+  }
+
   initializeMap() : void {
     this.mapLoading = true;
     this.cdr.detectChanges();
@@ -79,8 +103,10 @@ export class MapComponent implements AfterViewInit {
     this.centerOnUserLocation();
 
     this.map.on('contextmenu',(event : L.LeafletMouseEvent) => {
-      event.originalEvent.preventDefault();
-      this.showContextMenu(event);
+      if(this.isAddRouteActive){
+        event.originalEvent.preventDefault();
+        this.showContextMenu(event);
+      }
     })
 
     setTimeout(() => {
@@ -176,18 +202,19 @@ export class MapComponent implements AfterViewInit {
     });
     const startPin : MarkerModel = {
       'streetname': '',
-      'mapMarker': marker
+      'lat': this.selectedLatLng.lat,
+      'lng': this.selectedLatLng.lng
     };
     this.getStreetName(this.selectedLatLng).then(streetName => {
       startPin.streetname = streetName;
-      startPin.mapMarker.on('click', () => this.onMarkerClick(startPin.mapMarker,startPin.mapMarker.getLatLng(),startPin.streetname));
-      startPin.mapMarker.on('dragend', (event) => {
+      marker.on('click', () => this.onMarkerClick(marker,marker.getLatLng(),streetName));
+      marker.on('dragend', (event) => {
         const markerDragged = event.target;
         const newPosition = markerDragged.getLatLng();
         this.getNearestRoad(newPosition.lat,newPosition.lng).then(latlng => {
           this.getStreetName(latlng).then(newStreetName => {
             startPin.streetname = newStreetName;
-            startPin.mapMarker.setLatLng(latlng);
+            //startPin.mapMarker.setLatLng(latlng);
             this.routeService.updateRoute(this.route);
           });
         });

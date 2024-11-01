@@ -1,4 +1,5 @@
 export interface MarkerModel {
     streetname: string;
-    mapMarker: L.Marker;
+    lat: number;
+    lng: number
 }

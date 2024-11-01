@@ -3,7 +3,7 @@ import { Component, Host, HostListener } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { MapComponent } from './map/map.component';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { endWith } from 'rxjs';
+import { BreakpointObserverService } from './services/breakpoint-observer.service';
 
 @Component({
   selector: 'app-root',
@@ -27,7 +27,7 @@ export class AppComponent {
     this.breakpointObserver.observe([Breakpoints.Handset]).subscribe(result => {
       this.isMobileDevice = result.matches;
       if(this.isMobileDevice){
-        this.splitterHeight = 100;
+        this.splitterHeight = 150;
       }
     });
   }
@@ -50,10 +50,10 @@ export class AppComponent {
 
       const newHeight = this.maxHeight - currentY;
 
-      if(newHeight > this.maxHeight){
-        this.splitterHeight = this.maxHeight;
-      }else if( newHeight < 100) {
-        this.splitterHeight = 100
+      if(newHeight > this.maxHeight - 150){
+        this.splitterHeight = this.maxHeight - 150;
+      }else if( newHeight < 150) {
+        this.splitterHeight = 150
       }else{
         this.splitterHeight = newHeight;
       }

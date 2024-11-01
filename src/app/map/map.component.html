@@ -1,7 +1,10 @@
-<div class="mapLoading" *ngIf="mapLoading">
-  
-</div>
 <div id="map"></div>
+
+<div class="user-location" [ngClass]="{
+  'mobile-user-location' : isMobileDevice
+}" (click)="centerOnUserLocation()">
+  <i class="fa-solid fa-location-dot"></i>
+</div>
 
 
 <!-- Context Menu -->
