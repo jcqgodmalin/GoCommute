@@ -11,18 +11,19 @@
         <form action="">
             <div class="input-group addroute-type">
                 <span class="input-group-text" id="basic-addon1">PUV Type&nbsp;<span class="required">*</span></span>
-                <select class="form-select form-select-lg" name="vehicleType" [(ngModel)]="route.vehicleType" (ngModelChange)="vehicleTypeChanged($event)" aria-label="Default select example">
+                <select class="form-select form-select-lg" name="vehicleType" #vehicleType (change)="vehicleTypeChange(vehicleType.value)">
+                    <option value=""></option>
                     <option value="jeep">Jeepney</option>
                     <option value="bus">Bus</option>
-                    </select>
+                </select>
             </div>
             <div *ngIf="route.vehicleType != ''" class="addroute-details">
                 <div *ngIf="route.vehicleType === 'bus'" class="form-floating">
-                    <input type="text" class="form-control addroute-name" id="busname" placeholder="Bus Name">
+                    <input type="text" [ngModel]="this.route.busName" name="busName" #busName (change)="busNameChanged(busName.value)" class="form-control addroute-name" id="busname" placeholder="Bus Name">
                     <label for="busname">Bus Name <span class="required">*</span></label>
                 </div>
                 <div class="form-floating">
-                    <input type="text" class="form-control addroute-number" id="routenumber" placeholder="Route Number">
+                    <input type="text" [ngModel]="this.route.routeNumber" name="routeNumber" #routeNumber (change)="routeNumberChanged(routeNumber.value)" class="form-control addroute-number" id="routenumber" placeholder="Route Number">
                     <label for="routenumber">Route Number <span *ngIf="route.vehicleType === 'jeep'" class="required">*</span></label>
                 </div>
             </div>
@@ -60,7 +61,7 @@
                         <button type="button" class="btn btn-light" (click)="reset()">Reset</button>
                     </div>
                     <div class="col text-end">
-                        <button type="button" class="btn btn-success">Save Route</button>
+                        <button type="button" class="btn btn-success" (click)="saveRoute()">Save Route</button>
                     </div>
                 </div>
             </div>

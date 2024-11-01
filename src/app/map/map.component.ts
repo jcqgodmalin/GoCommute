@@ -7,9 +7,8 @@ import { Subscription } from 'rxjs';
 import { MarkerModel } from '../models/marker-model.model';
 import { MarkerService } from '../services/marker.service';
 import { CommonModule } from '@angular/common';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { BreakpointObserverService } from '../services/breakpoint-observer.service';
-import { Route, Router } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-map',
@@ -31,6 +30,7 @@ export class MapComponent implements AfterViewInit {
   public selectedMarker : {lat: number, lng: number, name: string} | null = null;
   private polyline : any;
   private currentPopUp : L.Popup | null = null;
+  private markerMapping : Map<string, L.Marker> = new Map();
 
   private route! : RouteModel;
   private routeSubscriber!: Subscription;
@@ -100,8 +100,6 @@ export class MapComponent implements AfterViewInit {
       attribution: '© OpenStreetMap'
     }).addTo(this.map);
 
-    this.centerOnUserLocation();
-
     this.map.on('contextmenu',(event : L.LeafletMouseEvent) => {
       if(this.isAddRouteActive){
         event.originalEvent.preventDefault();
@@ -117,6 +115,7 @@ export class MapComponent implements AfterViewInit {
 
   private updateMap() : void {
     this.mapLoading = true;
+
     this.clearMap();
 
     //display markers
@@ -135,20 +134,41 @@ export class MapComponent implements AfterViewInit {
       iconSize: [24, 24],
       iconAnchor: [12, 12]
     });
-
     
     if(this.route.markers){
       const markerCount = this.route.markers?.length;
       this.route.markers?.forEach((marker: MarkerModel, index: number) => {
+        let pin : L.Marker;
         if(index === 0){
-          marker.mapMarker.setIcon(startIcon);
+          pin = L.marker([marker.lat,marker.lng],{
+            icon: startIcon,
+            draggable: true
+          }).addTo(this.map);
+          pin.on('click', () => this.onMarkerClick(pin, pin.getLatLng(), marker.streetname));
+          pin.on('dragend', () => {
+            this.onMarkerDragEnd(pin,marker.lat,marker.lng);
+          });
         }else if(index === (markerCount - 1)){
-          marker.mapMarker.setIcon(endIcon);
+          pin = L.marker([marker.lat,marker.lng], {
+            icon: endIcon,
+            draggable: true
+          }).addTo(this.map);
+          pin.on('click', () => this.onMarkerClick(pin, pin.getLatLng(), marker.streetname));
+          pin.on('dragend', () => {
+            this.onMarkerDragEnd(pin,marker.lat,marker.lng);
+          });
         }else{
-          marker.mapMarker.setIcon(waypointIcon);
+          pin = L.marker([marker.lat,marker.lng], {
+            icon: waypointIcon,
+            draggable: true
+          }).addTo(this.map);
+          pin.on('click', () => this.onMarkerClick(pin, pin.getLatLng(), marker.streetname));
+          pin.on('dragend', () => {
+            this.onMarkerDragEnd(pin,marker.lat,marker.lng);
+          });
         }
-        this.map.addLayer(marker.mapMarker);
-      })
+        this.markerMapping.set(`${marker.lat,marker.lng}`,pin);
+      });
     }
     
     //display polyline
@@ -160,11 +180,11 @@ export class MapComponent implements AfterViewInit {
   private clearMap() : void {
     this.mapLoading = true;
     //remove markers
-    this.route.markers?.forEach((marker,index) => {
-      if(this.map.hasLayer(marker.mapMarker)){
-        this.map.removeLayer(marker.mapMarker);
-      }
+    this.markerMapping.forEach(marker => {
+      this.map.removeLayer(marker);
     });
+    this.markerMapping.clear();
+
     //remove polyline
     if(this.polyline && this.map.hasLayer(this.polyline)){
       this.map.removeLayer(this.polyline);
@@ -174,6 +194,7 @@ export class MapComponent implements AfterViewInit {
     if(this.currentPopUp){
       this.map.closePopup();
     }
+
     this.mapLoading = false;
   }
 
@@ -197,9 +218,6 @@ export class MapComponent implements AfterViewInit {
   }
 
   addMarker() : void {
-    const marker = L.marker(this.selectedLatLng, {
-      draggable: true
-    });
     const startPin : MarkerModel = {
       'streetname': '',
       'lat': this.selectedLatLng.lat,
@@ -207,24 +225,40 @@ export class MapComponent implements AfterViewInit {
     };
     this.getStreetName(this.selectedLatLng).then(streetName => {
       startPin.streetname = streetName;
-      marker.on('click', () => this.onMarkerClick(marker,marker.getLatLng(),streetName));
-      marker.on('dragend', (event) => {
-        const markerDragged = event.target;
-        const newPosition = markerDragged.getLatLng();
-        this.getNearestRoad(newPosition.lat,newPosition.lng).then(latlng => {
-          this.getStreetName(latlng).then(newStreetName => {
-            startPin.streetname = newStreetName;
-            //startPin.mapMarker.setLatLng(latlng);
-            this.routeService.updateRoute(this.route);
-          });
-        });
-      });
       this.route.markers?.push(startPin);
       this.routeService.updateRoute(this.route);
     }).catch(error => {
-      console.log("Error:",error);
+      console.log("Error",error);
     });
     this.hideContextMenu();
+  }
+
+  private onMarkerDragEnd(marker : L.Marker, oldLat: number, oldLng: number){
+    const newLat = marker.getLatLng().lat;
+    const newLng = marker.getLatLng().lng;
+    this.getNearestRoad(newLat,newLng).then(latlng => {
+      this.getStreetName(latlng).then(newStreetName => {
+        //get the marker in router service that has the old latlng value then set its new new streetname, lat and lng to the nearest road
+        let m = this.route.markers?.find(m => m.lat === oldLat && m.lng === oldLng);
+        if(m){
+          m.streetname = newStreetName;
+          m.lat = latlng.lat;
+          m.lng = latlng.lng;
+        }
+
+        //get the marker in markerMapping that also has the old latlng value then set its lat and lng to the nearest road
+        const oldKey = `${oldLat},${oldLng}`;
+        const newKey = `${newLat},${newLng}`;
+        let p = this.markerMapping.get(oldKey);
+        if(p){
+          this.markerMapping.delete(oldKey);
+          this.markerMapping.set(newKey,marker);
+        }
+
+        //update the route in router service
+        this.routeService.updateRoute(this.route);
+      });
+    })
   }
 
   private getNearestRoad(lat: number, lng: number) : Promise<L.LatLng> {
@@ -328,12 +362,12 @@ export class MapComponent implements AfterViewInit {
     removeButton.className = 'btn btn-sm btn-danger'; // Use Bootstrap classes for styling
     removeButton.style.marginTop = '10px';
 
-    removeButton.addEventListener('click',() => {
-      this.route.markers = this.route.markers?.filter(data => data.mapMarker !== marker);
-      this.routeService.updateRoute(this.route);
-      this.map.removeLayer(marker);
-      this.map.closePopup();
-    })
+    // removeButton.addEventListener('click',() => {
+    //   this.route.markers = this.route.markers?.filter(data => data.mapMarker !== marker);
+    //   this.routeService.updateRoute(this.route);
+    //   this.map.removeLayer(marker);
+    //   this.map.closePopup();
+    // })
   
     popoverDiv.appendChild(closeButton);
   

@@ -21,11 +21,17 @@ export class RouteService {
     this.routeSubject.next(this.route);
   }
 
+  saveRoute(route: RouteModel) : void {
+    console.log('Route object to be sent to backend',this.route);
+  }
+ 
   resetRoute() : void {
     this.route.isReset = true;
     this.routeSubject.next(this.route);
     this.route.isReset = false;
     this.route.markers = [];
+    this.route.latlngs = [];
+    console.log('Route object from route service',this.route);
   }
 
   //Polyline section -- START
@@ -82,7 +88,9 @@ export class RouteService {
             if(data.routes && Array.isArray(data.routes) && data.routes.length > 0){
               const route = data.routes[0];
               const coordinates = this.decodePolyline(route.geometry);
-              resolve(coordinates.map(coord => [coord.lat, coord.lng]));
+              const latlng : LatLngExpression[] = coordinates.map(coord => [coord.lat, coord.lng]);
+              this.route.latlngs = latlng;
+              resolve(latlng);
             }else{
               throw new Error('No route found');
             }

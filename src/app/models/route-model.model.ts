@@ -1,3 +1,4 @@
+import { LatLngExpression } from "leaflet";
 import { MarkerModel } from "./marker-model.model";
 
 export interface RouteModel {
@@ -5,5 +6,6 @@ export interface RouteModel {
     busName?: string;
     routeNumber?: string;
     markers?: MarkerModel[];
+    latlngs?: LatLngExpression[];
     isReset?: boolean;
 }
