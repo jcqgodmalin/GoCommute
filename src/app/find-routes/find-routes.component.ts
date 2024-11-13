@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { CommuteService } from '../services/commute.service';
 import { CommuteModel } from '../models/commute-model.model';
 import { Subscription } from 'rxjs';
+import { GoCommuteAPI } from '../services/GoCommute-API.service';
 
 @Component({
   selector: 'app-find-routes',
@@ -21,7 +22,7 @@ export class FindRoutesComponent {
 
   private commuteSubscriber! : Subscription;
 
-  constructor(private commuteService : CommuteService) {
+  constructor(private commuteService : CommuteService, private goCommuteAPIService : GoCommuteAPI) {
     this.commuteSubscriber = this.commuteService.commute$.subscribe(commute => {
       this.commute = commute;
       if(this.commute.userDestinationLat > 0 && this.commute.userLocationLat > 0){
@@ -31,6 +32,10 @@ export class FindRoutesComponent {
         }
       }
     })
+
+    this.goCommuteAPIService.getRoutes().then(data => {
+      console.log(data);
+    });
   }
 
   locationSwitched(checked : boolean) : void {
