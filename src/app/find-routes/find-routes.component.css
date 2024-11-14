@@ -1,3 +1,155 @@
+
+.find-route {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.map-container {
+    width: 100%;
+    height: 100%;
+}
+
+.find-route-controls {
+    position: absolute;
+    z-index: 999;
+    top: 0;
+    width: 30%;
+    height: 100%;
+    background-color: rgba(255,255,255,0.8);
+    padding: 20px;
+    
+    overflow-y: scroll;
+}
+
+.find-route-controls > div {
+    margin-bottom: 20px;
+}
+
+.find-route-controls > h1 {
+    margin-bottom: 20px;
+}
+
+.buttons {
+    /* padding-right:20px; */
+    display: flex;
+    justify-content: space-between;
+    column-gap: 30px;
+}
+
+.buttons > button {
+    flex-grow: 1;
+}
+
+
+.recommended-commute {
+    margin-top: 20px;
+    align-items: center;
+    justify-content: center;
+}
+
+.route-item {
+    cursor: pointer;
+    width: 100%;
+    position: relative;
+    display: flex;
+    padding: 20px;
+    margin-bottom: 10px;
+}
+
+.route-item:hover {
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.route-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 10px solid #fff;
+    overflow: hidden;
+}
+
+.route-image > img {
+    width: 100%;
+    height: 100%;
+}
+
+.route-info {
+    margin-left: 20px;
+    align-content: center;
+}
+
+.route-info > .route-name {
+    font-size: 26px;
+    font-weight: bolder;
+}
+
+.route-info > .route-type {
+    font-style: italic;
+    font-size: 20px;
+}
+
+
+
+
+/* Container for the storyline */
+.storyline-container {
+    width: 100%;
+    padding: 20px;
+    border-radius: 8px;
+    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
+  }
+  
+  /* Storyline Styling */
+  .storyline {
+    position: relative;
+    border-left: 1px dotted #000;
+    padding-left: 20px;
+  }
+  
+  /* Each storyline item */
+  .story-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  
+  .story-item:last-child {
+    margin-bottom: 0;
+  }
+  
+  /* Content inside each item */
+  .story-content {
+    /* background-color: #e7f7ee; */
+    /* padding: 15px 20px; */
+    padding-top: 20px;
+    /* border-radius: 6px; */
+    
+    flex: 1;
+  }
+  
+  /* Storyline icon */
+  .story-icon {
+    /* background-color: #4CAF50; */
+    color: #000;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: -35px;
+  }
+
+
+
+
+
+/* v0.1
+
 .find-route-title {
     border-bottom: 1px solid rgba(0,0,0,0.2);
     margin-bottom: 30px;
@@ -32,4 +184,4 @@ ul.commute-itenerary > li:not(ul.commute-itenerary > li:last-child) {
 #spinner {
     width: 30px;
     height: 30px;
-}
+} */

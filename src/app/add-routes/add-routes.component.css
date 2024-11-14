@@ -1,10 +1,36 @@
+.add-route {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.map-container {
+    width: 100%;
+    height: 100%;
+}
+
+.add-route-controls {
+    position: absolute;
+    z-index: 999;
+    top: 0;
+    width: 30%;
+    height: 100%;
+    background-color: rgba(255,255,255,0.8);
+    padding: 20px;
+    
+    overflow-y: scroll;
+}
+
+
+/*  v0.1
+
 .addroutes {
     height: 100%;
     width: 100%;
 }
 
 .addroute-type {
-    /* width: 50%; */
+    width: 50%;
 }
 
 .addroute-number, .addroute-name {
@@ -59,4 +85,4 @@ li {
 .addroute-buttons {
     margin-top: 20px;
     margin-bottom: 20px;
-}
+} */

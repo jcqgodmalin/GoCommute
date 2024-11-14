@@ -1,21 +1,28 @@
+<!--HEADER NAV-->
 <div class="header">
     <div class="header-logo">
         GoCommute
     </div>
     <div class="header-nav">
         <ul class="nav-ul">
-            <li class="nav-li"><a routerLink="/addroutes"><i class="fa-solid fa-draw-polygon" style="color: #45f7e2;"></i><br/>Add Route</a></li>
-            <li class="nav-li"><a routerLink="/findroutes"><i class="fa-solid fa-magnifying-glass" style="color: #45f7e2;"></i><br/>Find Route</a></li>
-            <li class="nav-li"><a routerLink="/account"><i class="fa-regular fa-user" style="color: #45f7e2;"></i><br/>Account</a></li>
+            <li class="nav-li"><a routerLink="/addroutes">Add Route</a></li>
+            <li class="nav-li"><a routerLink="/findroutes">Find Route</a></li>
+            <li class="nav-li"><a routerLink="/account">Account</a></li>
         </ul>
     </div>
 </div>
-<div class="row main-content" [ngClass]="{
+
+<!--MAIN CONTENT-->
+<div class="main-content">
+    <router-outlet/>
+</div>
+
+<!--DEV VERSION 0.1-->
+<!-- <div class="row main-content" [ngClass]="{
     'mobile-main-content' : isMobileDevice
 }">
-    <app-map></app-map>
     <div class="sidebar" [ngClass]="{'sidebar-mobile' : isMobileDevice}" [ngStyle]=" isMobileDevice ? {height : splitterHeight + 'px'} : {height : '90%'}">
         <div *ngIf="isMobileDevice" class="resizer" (mousedown)="onMouseDown($event)" (touchstart)="onMouseDown($event)"><i class="fa-regular fa-bars"></i></div>
         <router-outlet></router-outlet>
     </div>
-</div>
+</div> -->

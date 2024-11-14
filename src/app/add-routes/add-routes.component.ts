@@ -6,11 +6,12 @@ import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-
 import { MarkerService } from '../services/marker.service';
 import { SelectionChange } from '@angular/cdk/collections';
 import { RouteModelNew, MarkerModelNew } from '../models/route.model';
+import { MapComponent } from '../map/map.component';
 
 @Component({
   selector: 'app-add-routes',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule],
+  imports: [CommonModule, FormsModule, DragDropModule, MapComponent],
   templateUrl: './add-routes.component.html',
   styleUrl: './add-routes.component.css'
 })

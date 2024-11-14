@@ -1,4 +1,84 @@
 <div class="find-route">
+    <div class="map-container">
+        <app-map/>
+    </div>
+    <div class="find-route-controls">
+        <h1>Find Jeep/Bus Routes</h1>
+        <div class="location-switch">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" #locationSwitch id="flexSwitchCheckDefault" (change)="locationSwitched(locationSwitch.checked)" checked>
+                <label class="form-check-label" for="flexSwitchCheckDefault">Use my location</label>
+            </div>
+        </div>
+        <p *ngIf="!useUserLocationAsStartingPoint" class="customStartingPointReminder"><i class="fa-solid fa-circle-info"></i> Right click on the map to set your starting point</p>
+        
+        <div class="route-line">
+            <h4>Your Route:</h4>
+            <div class="storyline-container">
+                <div class="storyline">
+                    <!-- Storyline Step 1 -->
+                    <div class="story-item">
+                        <div class="story-content">
+                            <span>Starting Point</span>
+                            <p>Sample</p>
+                        </div>
+                        <div class="story-icon"><i class="fa-regular fa-circle-dot"></i></div>
+                    </div>
+            
+                  <!-- Storyline Step 2 -->
+                    <div class="story-item">
+                        <div class="story-content">
+                            <span>Destination</span>
+                            <p>Sample</p>
+                        </div>
+                        <div class="story-icon"><i class="fa-regular fa-circle-dot"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="buttons">
+            <button class="btn btn-light" type="button">Reset</button>
+            <button class="btn btn-primary" type="button">Find</button>
+        </div>
+        <hr/>
+        <div class="recommended-routes">
+            <h4>Recommended Jeep/Bus Routes:</h4>
+            <div class="recommended-commute">
+                <div class="route-item">
+                    <div class="route-image">
+                        <img src="assets/images/mango-jeep-yellow.jpg"/>
+                    </div>
+                    <div class="route-info">
+                        <div class="route-name">Mango Jeep - Yellow</div>
+                        <div class="route-type">Type: Bus</div>
+                    </div>
+                </div>
+                <div class="route-item">
+                    <div class="route-image">
+                        <img src="assets/images/mango-jeep-yellow.jpg"/>
+                    </div>
+                    <div class="route-info">
+                        <div class="route-name">Mango Jeep - Yellow</div>
+                        <div class="route-type">Type: Bus</div>
+                    </div>
+                </div>
+                <div class="route-item">
+                    <div class="route-image">
+                        <img src="assets/images/mango-jeep-yellow.jpg"/>
+                    </div>
+                    <div class="route-info">
+                        <div class="route-name">Mango Jeep - Yellow</div>
+                        <div class="route-type">Type: Bus</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--DEV VERSION 0.1-->
+<!-- <div class="find-route">
     <h1 class="find-route-title">Find Route</h1>
     <div class="find-route-starting">
         <h2>Starting Point</h2>
@@ -35,4 +115,4 @@
     <div class="commute-reset-button">
         <button type="button" class="btn btn-light">Reset</button>
     </div>
-</div>
+</div> -->
