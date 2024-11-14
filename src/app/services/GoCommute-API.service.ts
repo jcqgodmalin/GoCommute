@@ -11,8 +11,8 @@ export class GoCommuteAPI{
     constructor(private httpClient : HttpClient){}
 
     private baseUrl = "http://localhost:5097/api/v1";
-    private secretKey = "pGm6KLXhDBSESzAJdeXVDtUpWIrRlN1n";
-    private appId = "b8074706-8f26-44ec-ac94-49db960d3b7e";
+    private secretKey = "fwMYNJEjnbUeZa2qZvIU2YqerdFMMQ0y";
+    private appId = "c18b4adc-fc82-40e6-9d35-f2c90e9c5fa0";
 
     //generate-token
     private async generateToken() : Promise<string> {
