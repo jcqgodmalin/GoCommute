@@ -2,6 +2,7 @@ import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, Renderer2, Vie
 import * as L from 'leaflet';
 import { RouteService } from '../services/route.service';
 import { RouteModel } from '../models/route-model.model';
+import { MarkerModelNew, RouteModelNew, RoutePointModelNew } from '../models/route.model';
 import { LatLng } from 'leaflet';
 import { Subscription } from 'rxjs';
 import { MarkerModel } from '../models/marker-model.model';
@@ -37,6 +38,7 @@ export class MapComponent implements AfterViewInit {
   private markerMapping : Map<string, L.Marker> = new Map();
 
   private route! : RouteModel;
+  private routeModel! : RouteModelNew;
   private commute! : CommuteModel;
 
   private routeSubscriber!: Subscription;
@@ -65,13 +67,18 @@ export class MapComponent implements AfterViewInit {
       this.checkCurrentRoute();
       this.clearMap();
     });
-    this.routeSubscriber = this.routeService.route$.subscribe((route) => {
-      this.route = route;
-      if(this.route.isReset){
-        this.clearMap();
-      }else{
-        this.updateMap();
-      }
+    // this.routeSubscriber = this.routeService.route$.subscribe((route) => {
+    //   this.route = route;
+    //   if(this.route.isReset){
+    //     this.clearMap();
+    //   }else{
+    //     this.updateMap();
+    //   }
+    // });
+
+    this.routeService.newRoute$.subscribe((newRoute) => {
+      this.routeModel = newRoute;
+      this.updateMap();
     });
     // this.markerSubscriber = this.markerService.markerClicked$.subscribe(marker => {
     //     //do something when a marker is clicked
@@ -157,39 +164,39 @@ export class MapComponent implements AfterViewInit {
       iconAnchor: [12, 12]
     });
     
-    if(this.route.markers){
-      const markerCount = this.route.markers?.length;
-      this.route.markers?.forEach((marker: MarkerModel, index: number) => {
+    if(this.routeModel.markers){
+      const markerCount = this.routeModel.markers?.length;
+      this.routeModel.markers?.forEach((marker: MarkerModelNew, index: number) => {
         let pin : L.Marker;
         if(index === 0){
-          pin = L.marker([marker.lat,marker.lng],{
+          pin = L.marker([marker.latitude,marker.longitude],{
             icon: startIcon,
             draggable: true
           }).addTo(this.map);
-          pin.on('click', () => this.onMarkerClick(pin, pin.getLatLng(), marker.streetname));
+          pin.on('click', () => this.onMarkerClick(pin, pin.getLatLng(), marker.streetName));
           pin.on('dragend', () => {
-            this.onMarkerDragEnd(pin,marker.lat,marker.lng);
+            this.onMarkerDragEnd(pin,marker.latitude,marker.longitude);
           });
         }else if(index === (markerCount - 1)){
-          pin = L.marker([marker.lat,marker.lng], {
+          pin = L.marker([marker.latitude,marker.longitude], {
             icon: endIcon,
             draggable: true
           }).addTo(this.map);
-          pin.on('click', () => this.onMarkerClick(pin, pin.getLatLng(), marker.streetname));
+          pin.on('click', () => this.onMarkerClick(pin, pin.getLatLng(), marker.streetName));
           pin.on('dragend', () => {
-            this.onMarkerDragEnd(pin,marker.lat,marker.lng);
+            this.onMarkerDragEnd(pin,marker.latitude,marker.longitude);
           });
         }else{
-          pin = L.marker([marker.lat,marker.lng], {
+          pin = L.marker([marker.latitude,marker.longitude], {
             icon: waypointIcon,
             draggable: true
           }).addTo(this.map);
-          pin.on('click', () => this.onMarkerClick(pin, pin.getLatLng(), marker.streetname));
+          pin.on('click', () => this.onMarkerClick(pin, pin.getLatLng(), marker.streetName));
           pin.on('dragend', () => {
-            this.onMarkerDragEnd(pin,marker.lat,marker.lng);
+            this.onMarkerDragEnd(pin,marker.latitude,marker.longitude);
           });
         }
-        this.markerMapping.set(`${marker.lat,marker.lng}`,pin);
+        this.markerMapping.set(`${marker.latitude,marker.longitude}`,pin);
       });
     }
     
@@ -223,6 +230,7 @@ export class MapComponent implements AfterViewInit {
   showContextMenu(event : L.LeafletMouseEvent) : void {
     this.getNearestRoad(event.latlng.lat,event.latlng.lng).then(latlng => {
       this.selectedLatLng = latlng;
+      console.log(this.selectedLatLng);
     }).catch(error => {
       console.log("Error: ",error);
     });
@@ -240,15 +248,30 @@ export class MapComponent implements AfterViewInit {
   }
 
   addMarker() : void {
-    const startPin : MarkerModel = {
-      'streetname': '',
-      'lat': this.selectedLatLng.lat,
-      'lng': this.selectedLatLng.lng
+    const pin : MarkerModelNew = {
+      streetName: '',
+      latitude: this.selectedLatLng.lat,
+      longitude: this.selectedLatLng.lng
     };
+
+
+    // const startPin : MarkerModel = {
+    //   'streetname': '',
+    //   'lat': this.selectedLatLng.lat,
+    //   'lng': this.selectedLatLng.lng
+    // };
     this.getStreetName(this.selectedLatLng).then(streetName => {
-      startPin.streetname = streetName;
-      this.route.markers?.push(startPin);
-      this.routeService.updateRoute(this.route);
+
+      //new model
+      pin.streetName = streetName;
+      this.routeModel.markers?.push(pin);
+      this.routeService.updateNewRoute(this.routeModel);
+      console.log(this.routeModel);
+
+      //old model
+      // startPin.streetname = streetName;
+      // this.route.markers?.push(startPin);
+      // this.routeService.updateRoute(this.route);
     }).catch(error => {
       console.log("Error",error);
     });
@@ -299,11 +322,11 @@ export class MapComponent implements AfterViewInit {
     this.getNearestRoad(newLat,newLng).then(latlng => {
       this.getStreetName(latlng).then(newStreetName => {
         //get the marker in router service that has the old latlng value then set its new new streetname, lat and lng to the nearest road
-        let m = this.route.markers?.find(m => m.lat === oldLat && m.lng === oldLng);
+        let m = this.routeModel.markers?.find(m => m.latitude === oldLat && m.longitude === oldLng);
         if(m){
-          m.streetname = newStreetName;
-          m.lat = latlng.lat;
-          m.lng = latlng.lng;
+          m.streetName = newStreetName;
+          m.latitude = latlng.lat;
+          m.longitude = latlng.lng;
         }
 
         //get the marker in markerMapping that also has the old latlng value then set its lat and lng to the nearest road
@@ -316,7 +339,7 @@ export class MapComponent implements AfterViewInit {
         }
 
         //update the route in router service
-        this.routeService.updateRoute(this.route);
+        this.routeService.updateNewRoute(this.routeModel);
       });
     })
   }
@@ -370,13 +393,30 @@ export class MapComponent implements AfterViewInit {
   }
 
   private drawRouteLine() : void {
-    this.routeService.generateLatLngForPolyline()
+    this.routeService.generateLatLngForPolylineForNewRoute()
     .then(latlngs => {
       this.polyline = L.polyline(latlngs, {color: 'blue'});
       if(this.polyline){
         this.map.addLayer(this.polyline);
-        this.map.fitBounds(this.polyline.getBounds());
+        this.routeModel.routePoints = [];
+        var rpCount = 1;
+        latlngs.forEach((latlng) => {
+          let lat : number;
+          let lng : number;
+          if(Array.isArray(latlng)){
+            [lat,lng] = latlng;
+            const rp : RoutePointModelNew = {
+              order: rpCount,
+              latitude: lat,
+              longitude: lng
+            }
+            this.routeModel.routePoints.push(rp);
+            rpCount += 1;
+          }
+        })
+        //this.map.fitBounds(this.polyline.getBounds());
       }
+      console.log(this.routeModel);
     }).catch(error => {
     });
   }
@@ -461,9 +501,12 @@ export class MapComponent implements AfterViewInit {
   centerOnUserLocation(findRoute : boolean) : void {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(position => {
+          console.log(`${position}`);
+
             const userLat = position.coords.latitude;
             const userLng = position.coords.longitude;
 
+            
             // Center the map on the user's location
             this.map.setView([userLat, userLng], 18);
 

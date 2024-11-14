@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { RouteModel } from "../models/route.model";
+import { RouteModelNew } from "../models/route.model";
 import { firstValueFrom, map, Observable } from "rxjs";
 
 @Injectable({
@@ -25,15 +25,18 @@ export class GoCommuteAPI{
         return data.accessToken;
     }
 
-    public async getRoutes() : Promise<RouteModel[]> {
+    private async generateHeader() : Promise<HttpHeaders> {
         var token = await this.generateToken();
-        console.log(`${token}`);
-        const headers = new HttpHeaders({
+        return new HttpHeaders({
             "Authorization" : `Bearer ${token}`
         });
+    }
 
-        const routes = await firstValueFrom(this.httpClient.get<RouteModel[]>(`${this.baseUrl}/route`,{headers}).pipe(
-            map((routes : RouteModel[]) => {
+    public async getRoutes() : Promise<RouteModelNew[]> {
+        var headers = await this.generateHeader();
+
+        const routes = await firstValueFrom(this.httpClient.get<RouteModelNew[]>(`${this.baseUrl}/route`,{headers}).pipe(
+            map((routes : RouteModelNew[]) => {
                 console.log(routes);
                 return routes.map(route => {
                     route.id = route.id;
@@ -72,4 +75,23 @@ export class GoCommuteAPI{
         
     }
 
+    // public async getRoutesThatPassesBy(latitude : number, longitude : number) : Promise<RouteModel[]> {}
+
+    // public async getRouteById() : Promise<RouteModel> {}
+
+    // public async getRouteByRouteNumber() : Promise<RouteModel>{}
+
+    // public async getRouteByBusName() : Promise<RouteModel> {}
+
+    public async saveRoute(route : RouteModelNew) : Promise<void> {
+        try{
+            console.log(route);
+            var headers = await this.generateHeader();
+            const res = await firstValueFrom(this.httpClient.post(`${this.baseUrl}/route`,route,{headers}));
+            console.log(res);
+        }  catch (error : any){
+            console.log(error);
+        }
+        
+    }
 }

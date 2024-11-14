@@ -1,30 +1,30 @@
-export interface RouteModel {
-    id: number,
+export interface RouteModelNew {
+    id?: number,
     vehicleType: string,
-    busName: string,
-    routeNumber: string,
+    busName?: string,
+    routeNumber?: string,
     verified: boolean,
-    markers: MarkerModel[],
-    routePoints: RoutePointModel[],
+    markers: MarkerModelNew[],
+    routePoints: RoutePointModelNew[],
     routeTravelTimeInSeconds: number,
-    created_By: string,
-    updated_By: string,
-    created_At: Date,
-    updated_At: Date
+    created_By?: string,
+    updated_By?: string,
+    created_At?: Date,
+    updated_At?: Date
 }
 
-export interface MarkerModel {
-    id: number,
-    routeId: number,
-    order: number,
+export interface MarkerModelNew {
+    id?: number,
+    routeId?: number,
+    order?: number,
     streetName: string,
     latitude: number,
     longitude: number
 }
 
-export interface RoutePointModel {
-    id: number,
-    routeId: number,
+export interface RoutePointModelNew {
+    id?: number,
+    routeId?: number,
     order: number,
     latitude: number,
     longitude: number

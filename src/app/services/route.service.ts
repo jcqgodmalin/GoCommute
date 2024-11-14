@@ -3,6 +3,8 @@ import { RouteModel } from '../models/route-model.model';
 import { MarkerModel } from '../models/marker-model.model';
 import { BehaviorSubject } from 'rxjs';
 import { LatLngExpression, Marker } from 'leaflet';
+import { MarkerModelNew, RouteModelNew, RoutePointModelNew } from '../models/route.model';
+import { GoCommuteAPI } from './GoCommute-API.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +15,9 @@ export class RouteService {
     markers: [],
     isReset: false
   }
+
+  constructor(private goCommuteAPIService : GoCommuteAPI){}
+
   private routeSubject = new BehaviorSubject<RouteModel>(this.route);
   route$ = this.routeSubject.asObservable();
 
@@ -33,6 +38,105 @@ export class RouteService {
     this.route.latlngs = [];
     console.log('Route object from route service',this.route);
   }
+
+  //new route model
+  private newRoute : RouteModelNew = {
+    vehicleType : '',
+    verified: false,
+    markers: [],
+    routePoints: [],
+    routeTravelTimeInSeconds: 0
+  }
+
+  private newRouteSubject = new BehaviorSubject<RouteModelNew>(this.newRoute);
+  newRoute$ = this.newRouteSubject.asObservable();
+
+  updateNewRoute(route: RouteModelNew) : void {
+    this.newRoute = route;
+    this.newRouteSubject.next(this.newRoute);
+  }
+
+  saveNewRoute() : void {
+    console.log(this.newRoute);
+    this.goCommuteAPIService.saveRoute(this.newRoute);
+  }
+ 
+  resetNewRoute() : void {
+    this.newRoute.markers = [];
+    this.newRoute.routePoints = [];
+    console.log('Route object from route service',this.newRoute);
+    this.newRouteSubject.next(this.newRoute);
+  }
+
+  generateLatLngForPolylineForNewRoute() : Promise<LatLngExpression[]> {
+
+    return new Promise((resolve,reject) => {
+      if(this.newRoute.markers){
+        if(this.newRoute.markers.length > 1){
+
+          const markersCount = this.newRoute.markers.length;
+          let start! : MarkerModelNew;
+          let waypoints : MarkerModelNew[] = [];
+          let end! : MarkerModelNew;
+
+          this.newRoute.markers.forEach((marker: MarkerModelNew,index : number) => {
+
+            if(index === 0){
+              start = marker;
+            }else if(index === markersCount - 1){
+              end = marker;
+            }else if(index !== 0 && index !== markersCount -1){
+              waypoints.push(marker);
+            }
+
+          });
+
+          //check if waypoints array is populated. If yes, populate the waypointString
+          let waypointsString;
+          if(waypoints.length > 0){
+            waypointsString = waypoints.map(waypoint => `${waypoint.longitude},${waypoint.latitude}`).join(';');
+          }
+
+          //compose the query parameter to  osrm
+          let osrmQueryParameter! : string;
+          if(start && end){
+            if(waypointsString){
+              osrmQueryParameter = `${start.longitude},${start.latitude};${waypointsString};${end.longitude},${end.latitude}`;
+            }else{
+              osrmQueryParameter = `${start.longitude},${start.latitude};${end.longitude},${end.latitude}`;
+            }
+          }else{
+            reject();
+          }
+
+          //call osrm
+          const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${osrmQueryParameter}?overview=full`;
+          fetch(osrmUrl).then(response => {
+            if(!response.ok){
+              throw new Error('Unable to reach the OSRM server');
+            }
+            return response.json();
+          }).then(data => {
+            if(data.routes && Array.isArray(data.routes) && data.routes.length > 0){
+              const route = data.routes[0];
+              const coordinates = this.decodePolyline(route.geometry);
+              const latlng : LatLngExpression[] = coordinates.map(coord => [coord.lat, coord.lng]);
+              resolve(latlng);
+            }else{
+              throw new Error('No route found');
+            }
+          }).catch(error => {
+            reject(error);
+          });
+        }
+      }
+    });
+  }
+  //new route model
+
+
+
+  
 
   //Polyline section -- START
 

@@ -20,6 +20,7 @@
 
 .addroute-itenerary > ul {
     list-style-type: none;
+    overflow-y: hidden;
     padding: 0;
     margin: 0;
     border-left: 2px dotted black;
@@ -28,13 +29,21 @@
 
 .addroute-itenerary > ul > li {
     margin-bottom: 10px;
+    list-style-type: none;
+    overflow-y: hidden;
+}
+
+li {
+    list-style-type: none;
+    overflow: hidden;
+    cursor: grabbing;
 }
 
 .marker {
     background-color: rgb(174, 218, 243);
     border-radius: 10px;
     padding: 3px 20px;
-    cursor: pointer;
+    cursor:grab;
 }
 
 .route-icon {

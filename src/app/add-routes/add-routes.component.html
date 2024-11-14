@@ -40,15 +40,15 @@
                             <ng-container *ngFor="let marker of route.markers; let i = index">
                                 <ng-container *ngIf="i === 0">
                                     <li (mouseenter)="markerHovered(marker)"
-                                    (click)="markerClicked(marker)" cdkDrag><span class="marker"><i class="fa-solid fa-map-pin route-icon"></i>{{marker.streetname}}</span></li>
+                                    (click)="markerClicked(marker)" cdkDrag><span class="marker"><i class="fa-solid fa-map-pin route-icon"></i>{{marker.streetName}}</span></li>
                                 </ng-container> 
                                 <ng-container *ngIf="route.markers!.length > 1 && i === route.markers!.length - 1">
                                     <li (mouseenter)="markerHovered(marker)"
-                                    (click)="markerClicked(marker)" cdkDrag><span class="marker"><i class="fa-solid fa-map-pin route-icon"></i>{{marker.streetname}}</span></li>
+                                    (click)="markerClicked(marker)" cdkDrag><span class="marker"><i class="fa-solid fa-map-pin route-icon"></i>{{marker.streetName}}</span></li>
                                 </ng-container>
                                 <ng-container *ngIf="i !== 0 && i !== (route.markers!.length - 1)">
                                     <li (mouseenter)="markerHovered(marker)"
-                                    (click)="markerClicked(marker)" cdkDrag><span class="marker"><i class="fa-regular fa-circle-dot waypoint"></i>{{marker.streetname}}</span></li>
+                                    (click)="markerClicked(marker)" cdkDrag><span class="marker"><i class="fa-regular fa-circle-dot waypoint"></i>{{marker.streetName}}</span></li>
                                 </ng-container>
                             </ng-container>
                         </ul>

@@ -2,11 +2,10 @@ import { ChangeDetectorRef, Component, ElementRef, EventEmitter, Output, ViewChi
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouteService } from '../services/route.service';
-import { RouteModel } from '../models/route-model.model';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
-import { MarkerModel } from '../models/marker-model.model';
 import { MarkerService } from '../services/marker.service';
 import { SelectionChange } from '@angular/cdk/collections';
+import { RouteModelNew, MarkerModelNew } from '../models/route.model';
 
 @Component({
   selector: 'app-add-routes',
@@ -20,12 +19,12 @@ export class AddRoutesComponent {
   @ViewChild('busName') busNameEl!: ElementRef;
   @ViewChild('routeNumber') routeNumberEl!: ElementRef;
 
-  route! : RouteModel;
+  route! : RouteModelNew;
 
   constructor(public routeService : RouteService, private markerService : MarkerService, private cdr: ChangeDetectorRef) {
-    this.routeService.route$.subscribe((route) => {
+    this.routeService.newRoute$.subscribe((route) => {
       this.route = route;
-    });
+    })
   }
 
   private clearInvalids() : void {
@@ -64,16 +63,18 @@ export class AddRoutesComponent {
         if(!this.route.busName){
           this.busNameEl.nativeElement.classList.add('is-invalid');
         }else{
-          this.routeService.updateRoute(this.route);
-          this.routeService.saveRoute(this.route);
+          this.route.created_By = "godmalin.jc@gmail.com";
+          this.routeService.updateNewRoute(this.route);
+          this.routeService.saveNewRoute();
         }
       }else{
         //jeep
         if(!this.route.routeNumber){
           this.routeNumberEl.nativeElement.classList.add('is-invalid');
         }else{
-          this.routeService.updateRoute(this.route);
-          this.routeService.saveRoute(this.route);
+          this.route.created_By = "godmalin.jc@gmail.com";
+          this.routeService.updateNewRoute(this.route);
+          this.routeService.saveNewRoute();
         }
       }
     }else{
@@ -85,25 +86,26 @@ export class AddRoutesComponent {
   draggeddrop(event: CdkDragDrop<any[]>){
     if(this.route.markers){
       moveItemInArray(this.route.markers,event.previousIndex,event.currentIndex);
-      this.routeService.updateRoute(this.route);
+      console.log(this.route);
+      this.routeService.updateNewRoute(this.route);
     }
   }
 
-  markerHovered(marker : MarkerModel) : void {
+  markerHovered(marker : MarkerModelNew) : void {
     this.markerService.emitHoveredMarker(marker);
   }
 
-  markerClicked(marker : MarkerModel) : void {
+  markerClicked(marker : MarkerModelNew) : void {
     this.markerService.emitClickedMarker(marker);
   }
 
   reset() : void {
     this.route.vehicleType = '';
-    this.clearInvalids();
     this.vehicleTypeEl.nativeElement.value = '';
     this.route.busName = '';
     this.route.routeNumber = '';
-    this.routeService.resetRoute();
-    console.log('Route object from add-route',this.route);
+    
+    this.clearInvalids();
+    this.routeService.resetNewRoute();
   }
 }
